@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ugeplan til A4</title>
+<title>Ugeplan – A4 Print</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Andika:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -32,8 +32,13 @@ body{font-family:'Andika',sans-serif;background:var(--bg);color:var(--text);min-
 textarea{background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Andika',sans-serif;font-size:12px;line-height:1.6;padding:14px 16px;resize:vertical;min-height:220px;outline:none;transition:border-color .2s;width:100%;}
 textarea::placeholder{color:var(--muted);}
 textarea:focus{border-color:var(--tue);}
-.hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.6;background:#ffffff06;border-radius:8px;padding:10px 14px;}
+.hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.8;background:#ffffff06;border-radius:8px;padding:10px 14px;}
 .hint strong{color:var(--text);}
+.hint em{color:var(--tue);font-style:normal;}
+.tagline{font-size:13px;color:var(--muted);font-weight:600;line-height:1.6;padding:2px 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.help-pill{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:3px 12px;font-family:'Andika',sans-serif;font-weight:800;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.help-pill:hover{border-color:var(--tue);color:var(--tue);}
+.help-pill.active{border-color:var(--tue);color:var(--tue);background:#FF9F4315;}
 .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .status{font-size:11.5px;font-weight:700;color:var(--muted);min-height:18px;}
 .status.error{color:var(--accent);}
@@ -132,14 +137,28 @@ textarea:focus{border-color:var(--tue);}
 </div>
 
 <div class="input-section">
+  <div class="tagline">
+    Begrænse brugen af skærme og giv børnene deres egen ugeplan – som kan hænges i et fællesområde.
+    <button class="help-pill" id="helpToggle" onclick="toggleHelp()">❓ Hvordan bruger jeg siden?</button>
+  </div>
+  <div class="hint" id="helpSection" style="display:none">
+    <strong>Sådan bruger du siden:</strong><br><br>
+    Siden omdanner den rå tekst fra SkoleIntra til en overskuelig ugeplan klar til print.<br><br>
+    <strong>1. Åbn SkoleIntra i mobilvisning</strong><br>
+    Gør browservinduet smallere (eller brug din telefon), så siden skifter til mobilvisning med harmonika-menuer.<br><br>
+    <strong>2. Åbn alle afsnit</strong><br>
+    Tryk på <em>Generelt</em> og alle ugedagene, så hele ugeplanen er synlig. <em>Tip: start nedefra og arbejd opad – så går det hurtigst!</em><br><br>
+    <strong>3. Kopier al tekst</strong><br>
+    Vælg alt på siden <strong>(Ctrl/Cmd+A)</strong> og kopier <strong>(Ctrl/Cmd+C)</strong>.<br><br>
+    <strong>4. Indsæt og generer</strong><br>
+    Sæt teksten ind i feltet herunder <strong>(Ctrl/Cmd + V)</strong> og tryk "Strukturér ugeplan" – eller brug <strong>Ctrl/Cmd + Enter</strong>.<br><br>
+    <strong>5. Print eller gem som PDF</strong><br>
+    Tryk på 🖨️ Udskriv / PDF og print eller gem som PDF. 
+  </div>
   <textarea id="rawInput" placeholder="Indsæt hele ugeplanen fra SkoleIntra her 📋 - husk at kopiér fra mobilvisningen af SkoleIntra (visningen med harmonika-menuen)"></textarea>
   <div class="actions">
     <button class="btn primary" onclick="buildPlan()">📐 Strukturér ugeplan</button>
     <span class="status" id="status"></span>
-  </div>
-  <div class="hint">
-    <strong>Sådan gør du:</strong> Kopier al tekst fra SkoleIntra-ugeplanen og indsæt herover – inkl. introduktionsteksten og alle dagsbeskrivelser. Du skal gøre SkoleIntra-siden i <strong>mobilvisningen</strong> ved at gøre vinduet mindre. Herefter åbner du Generelt og alle dagene (<strong>TIP: åben dem nedefra og op - det går hurtigere!</strong>) Vælg nu ALT fra siden og kopier og den rå tekst sætter du ind i feltet her.<br>
-    Teksten reorganiseres direkte uden AI. <strong>Genvej:</strong> Ctrl/Cmd + Enter.
   </div>
 </div>
 
@@ -475,6 +494,15 @@ function renderPage(data, meta){
     <div class="days-row">${daysHTML}</div>
     ${footerHTML}
   </div>`;
+}
+
+function toggleHelp(){
+  const section = document.getElementById('helpSection');
+  const btn     = document.getElementById('helpToggle');
+  const open    = section.style.display === 'none';
+  section.style.display = open ? 'block' : 'none';
+  btn.classList.toggle('active', open);
+  btn.textContent = open ? '✕ Luk hjælp' : '❓ Hvordan bruger jeg siden?';
 }
 
 function buildPlan(){
