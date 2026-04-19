@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ugeplan – Direkte</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Andika:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --bg:#0f0f1a; --panel:#16162a; --card:#1e1e35; --border:#2a2a45;
+  --text:#e8e8f0; --muted:#6b6b8a; --accent:#e94560;
+  --mon:#FF6B6B; --tue:#FF9F43; --wed:#48DBFB; --thu:#1DD1A1; --fri:#A29BFE;
+  --sched-bg:#FFF9F0; --ink:#2D2D2D;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Andika',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+.top-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.top-bar-title{font-family:'Baloo 2',cursive;font-size:20px;flex:1;}
+.top-bar-title span{color:var(--tue);}
+.btn{background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 14px;font-family:'Andika',sans-serif;font-weight:800;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{color:var(--text);border-color:var(--text);}
+.btn.primary{background:var(--tue);border-color:var(--tue);color:#1a0800;}
+.btn.primary:hover{opacity:.88;}
+.btn.hidden{display:none;}
+
+.input-section{padding:20px 24px;display:flex;flex-direction:column;gap:12px;}
+.meta-row{display:flex;gap:10px;flex-wrap:wrap;}
+.meta-input{background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Andika',sans-serif;font-size:13px;padding:8px 12px;outline:none;transition:border-color .2s;width:160px;}
+.meta-input::placeholder{color:var(--muted);}
+.meta-input:focus{border-color:var(--tue);}
+textarea{background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Andika',sans-serif;font-size:12px;line-height:1.6;padding:14px 16px;resize:vertical;min-height:220px;outline:none;transition:border-color .2s;width:100%;}
+textarea::placeholder{color:var(--muted);}
+textarea:focus{border-color:var(--tue);}
+.hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.6;background:#ffffff06;border-radius:8px;padding:10px 14px;}
+.hint strong{color:var(--text);}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.status{font-size:11.5px;font-weight:700;color:var(--muted);min-height:18px;}
+.status.error{color:var(--accent);}
+.status.done{color:var(--thu);}
+
+.preview-section{flex:1;background:#2a2a3e;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px;overflow-y:auto;}
+.preview-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:60px 40px;}
+.preview-placeholder .big-emoji{font-size:56px;}
+.preview-placeholder h2{font-family:'Baloo 2',cursive;font-size:20px;color:#4a4a6a;}
+.preview-placeholder p{font-size:13px;font-weight:600;max-width:280px;line-height:1.6;}
+
+.a4-scale-wrapper{display:block;transform-origin:top left;}
+.a4-frame{background:white;width:297mm;height:210mm;box-shadow:0 8px 40px rgba(0,0,0,.5);border-radius:3px;overflow:hidden;}
+.a4-frame .page{width:297mm;height:210mm;padding:7mm 8mm 6mm;background:var(--sched-bg);font-family:'Andika',sans-serif;color:var(--ink);display:flex;flex-direction:column;}
+
+.a4-frame .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;padding-bottom:5px;border-bottom:3px solid var(--ink);flex-shrink:0;}
+.a4-frame .hdr-title{font-family:'Baloo 2',cursive;font-size:21px;line-height:1;}
+.a4-frame .hdr-sub{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.a4-frame .hdr-badge{background:var(--ink);color:white;font-family:'Baloo 2',cursive;font-size:17px;padding:3px 12px;border-radius:50px;}
+
+.a4-frame .gnote{background:#FFF3CD;border-left:4px solid #FECA57;border-radius:8px;padding:7px 12px 8px;font-size:10px;font-weight:600;line-height:1.6;margin-bottom:6px;flex-shrink:0;}
+.a4-frame .gnote-label{font-size:10.5px;font-weight:800;display:block;margin-bottom:5px;color:#7a5800;}
+.a4-frame .gnote-body{columns:3;column-gap:14px;text-align:justify;line-height:1.6;orphans:2;widows:2;}
+
+.a4-frame .days-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-height:0;}
+.a4-frame .day-col{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.09);background:white;display:flex;flex-direction:column;min-height:0;}
+.a4-frame .day-hdr{padding:5px 8px 4px;color:white;font-family:'Baloo 2',cursive;line-height:1.1;flex-shrink:0;}
+.a4-frame .day-hdr .dname{font-size:14px;}
+.a4-frame .day-hdr .ddate{font-size:9px;font-family:'Andika',sans-serif;font-weight:600;opacity:.85;}
+.a4-frame .mon .day-hdr{background:var(--mon);}
+.a4-frame .tue .day-hdr{background:var(--tue);color:var(--ink);}
+.a4-frame .tue .day-hdr .ddate{opacity:.6;}
+.a4-frame .wed .day-hdr{background:var(--wed);color:var(--ink);}
+.a4-frame .wed .day-hdr .ddate{opacity:.6;}
+.a4-frame .thu .day-hdr{background:var(--thu);}
+.a4-frame .fri .day-hdr{background:var(--fri);}
+
+.a4-frame .day-body{flex:1;overflow:hidden;padding:4px 5px;display:flex;flex-direction:column;gap:3px;}
+.a4-frame .special-day{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;text-align:center;gap:5px;}
+.a4-frame .special-day .sp-icon{font-size:26px;line-height:1;}
+.a4-frame .special-day .sp-label{font-family:'Baloo 2',cursive;font-size:12px;color:#888;}
+.a4-frame .special-day .sp-desc{font-size:8px;color:#aaa;font-weight:600;line-height:1.4;}
+
+.a4-frame .lesson{border-radius:6px;padding:3px 5px 4px;flex-shrink:0;}
+.a4-frame .mon .lesson{background:#FFEEEE;border-left:3px solid var(--mon);}
+.a4-frame .tue .lesson{background:#FFF3E0;border-left:3px solid var(--tue);}
+.a4-frame .wed .lesson{background:#E8FAFE;border-left:3px solid var(--wed);}
+.a4-frame .thu .lesson{background:#E8FBF5;border-left:3px solid var(--thu);}
+.a4-frame .fri .lesson{background:#F0EEFF;border-left:3px solid var(--fri);}
+.a4-frame .lesson .ltime{font-size:7.5px;font-weight:700;opacity:.4;display:block;letter-spacing:.02em;}
+.a4-frame .lesson .lsubject{font-size:10px;font-weight:800;display:block;line-height:1.2;overflow-wrap:anywhere;}
+.a4-frame .lesson .ldesc{font-size:8.5px;font-weight:600;margin-top:2px;line-height:1.4;display:block;color:#444;overflow-wrap:anywhere;}
+.a4-frame .lesson .ldesc.empty{color:#bbb;font-style:italic;}
+.a4-frame .free-note{font-size:8.5px;font-weight:600;color:#555;line-height:1.45;padding:3px 4px 4px;border-radius:6px;background:#f5f5f5;margin-bottom:2px;flex-shrink:0;}
+.a4-frame .vikar-badge{display:inline-block;font-size:7px;font-weight:800;background:#FECA57;color:#1a1000;border-radius:20px;padding:1px 6px;margin-top:2px;letter-spacing:.03em;}
+
+/* Activity-only day (0. grade style) */
+.a4-frame .activity-body{flex:1;overflow:hidden;padding:6px 7px;display:flex;flex-direction:column;justify-content:center;gap:0;min-width:0;}
+.a4-frame .activity-item{display:flex;align-items:baseline;gap:5px;padding:3px 0;border-bottom:1px solid #f0f0f0;line-height:1.35;}
+.a4-frame .activity-item:last-child{border-bottom:none;}
+.a4-frame .activity-item::before{content:'•';font-size:14px;font-weight:900;flex-shrink:0;margin-top:-1px;}
+.a4-frame .mon .activity-item::before{color:var(--mon);}
+.a4-frame .tue .activity-item::before{color:var(--tue);}
+.a4-frame .wed .activity-item::before{color:var(--wed);}
+.a4-frame .thu .activity-item::before{color:var(--thu);}
+.a4-frame .fri .activity-item::before{color:var(--fri);}
+.a4-frame .activity-text{font-size:13px;font-weight:700;color:var(--ink);overflow-wrap:anywhere;min-width:0;}
+.a4-frame .activity-free .activity-text{color:#888;font-weight:600;font-size:11px;}
+.a4-frame .activity-free::before{color:#ccc !important;}
+.a4-frame .activity-item{display:flex;align-items:baseline;gap:5px;padding:3px 0;border-bottom:1px solid #f0f0f0;line-height:1.35;min-width:0;}
+
+.a4-frame .footer{text-align:center;font-size:9px;font-weight:700;color:#bbb;letter-spacing:.05em;margin-top:4px;flex-shrink:0;}
+
+@media print{
+  body{background:white;}
+  .top-bar,.input-section{display:none !important;}
+  .preview-section{padding:0;background:white;display:block;}
+  .a4-scale-wrapper{transform:none !important;margin:0 !important;}
+  .a4-frame{box-shadow:none;width:297mm;height:210mm;}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  @page{size:A4 landscape;margin:0;}
+}
+@media(max-width:700px){
+  .input-section{padding:14px 12px;}
+  .preview-section{padding:8px 4px;overflow:visible;align-items:flex-start;justify-content:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-title">📅 Ugeplan – <span>Direkte visning</span></div>
+  <button class="btn" onclick="clearAll()">✕ Ryd</button>
+  <button class="btn primary hidden" id="printBtn" onclick="window.print()">🖨️ Udskriv / PDF</button>
+</div>
+
+<div class="input-section">
+  <div class="meta-row">
+    <input class="meta-input" id="metaClass"     placeholder="Klasse (fx 3Y)" />
+    <input class="meta-input" id="metaWeek"      placeholder="Uge (fx 17)" type="number" />
+    <input class="meta-input" id="metaDateRange" placeholder="fx 20.–24. april" style="width:200px"/>
+  </div>
+  <textarea id="rawInput" placeholder="Indsæt hele ugeplanen fra Aula her 📋"></textarea>
+  <div class="actions">
+    <button class="btn primary" onclick="buildPlan()">📐 Strukturér ugeplan</button>
+    <span class="status" id="status"></span>
+  </div>
+  <div class="hint">
+    <strong>Sådan gør du:</strong> Kopier al tekst fra Aula-ugeplanen og indsæt herover – inkl. introduktionsteksten og alle dagsbeskrivelser.<br>
+    Teksten reorganiseres direkte uden AI. <strong>Genvej:</strong> Ctrl/Cmd + Enter.
+  </div>
+</div>
+
+<div class="preview-section" id="previewSection">
+  <div class="preview-placeholder">
+    <div class="big-emoji">📋</div>
+    <h2>Klar til ugeplan</h2>
+    <p>Indsæt teksten fra Aula og tryk "Strukturér ugeplan".</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const EMOJIS = ['🌸','🌻','🌈','⭐','🦋','🌊','🍀','🌙','🎨','🎵','🌿','🦊','🐝','🎪','🌺','🍁','🎭','🧩','🎈','🌍'];
+function randomEmoji(){ return EMOJIS[Math.floor(Math.random()*EMOJIS.length)]; }
+
+function esc(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Subject code → display name
+const SUBJ_CODE = {
+  DAN:'Dansk', MAT:'Matematik', ENG:'Engelsk', MUS:'Musik',
+  IDR:'Idræt', KUN:'Kunst', HIS:'Historie', REL:'Religion',
+  'N/T':'Natur/teknologi', NAT:'Natur/teknologi', GEO:'Geografi',
+  BIO:'Biologi', FYS:'Fysik/kemi', SAM:'Samfundsfag',
+  TYS:'Tysk', FRA:'Fransk', TRIV:'Trivsel', FRI:'Fri', SFO:'SFO',
+};
+
+// Codes to silently skip (0. grade internal slots not relevant for the overview)
+const SKIP_CODES = new Set(['BHK','ST','STØ']);
+// Codes that mean "free period" — skip as a lesson but note it if it's the only slot
+const FREE_CODES = new Set(['FRI']);
+
+// "03Y DAN 3yL" → "Dansk"  (returns null if not a code line or if code is skipped)
+// Returns '__FREE__' for free-period codes so the caller can detect them.
+function resolveCodeLine(line){
+  const m = line.trim().match(/^[0-9A-ZÆØÅ]{2,4}\s+([A-ZÆØÅ\/]{2,5})\b/i);
+  if(!m) return null;
+  const code = m[1].toUpperCase();
+  if(SKIP_CODES.has(code)) return null;
+  if(FREE_CODES.has(code)) return '__FREE__';
+  return SUBJ_CODE[code] || code;
+}
+
+// "08:00 - 08:45" or "08:00 – 08:45" → normalised string, else null
+function asTimeLine(line){
+  const m = line.trim().match(/^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/);
+  return m ? `${m[1]} – ${m[2]}` : null;
+}
+
+// Day header: "Mandag 20. apr." etc.
+const DAY_HDR_RE = /^(Mandag|Tirsdag|Onsdag|Torsdag|Fredag)\s+(\d{1,2}\.?\s*\w+\.?.*)/i;
+function isDayHeader(line){ return DAY_HDR_RE.test(line.trim()); }
+function parseDayHeader(line){
+  const m = line.trim().match(DAY_HDR_RE);
+  return m ? {name: cap(m[1]), date: m[2].trim()} : {name:line.trim(), date:''};
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase(); }
+function dayKey(name){
+  const l=name.toLowerCase();
+  if(l.startsWith('man')) return 'mon';
+  if(l.startsWith('tir')) return 'tue';
+  if(l.startsWith('ons')) return 'wed';
+  if(l.startsWith('tor')) return 'thu';
+  if(l.startsWith('fre')) return 'fri';
+  return null;
+}
+
+function hasVikar(text){ return /\bvikar\b|jeg er væk|har fri\b|jeg er på tur|begge er væk/i.test(text); }
+
+// ── MAIN PARSER ──────────────────────────────────────────
+function parseAula(raw){
+  const lines = raw.split('\n').map(l => l.trim());
+
+  // Split into preamble and per-day blocks
+  const firstDayIdx = lines.findIndex(l => isDayHeader(l));
+  const preamble = lines.slice(0, firstDayIdx < 0 ? lines.length : firstDayIdx);
+  const rest     = firstDayIdx < 0 ? [] : lines.slice(firstDayIdx);
+
+  const generalNote = parseGeneralNote(preamble);
+
+  // Group lines into day blocks
+  const dayBlocks = [];
+  for(const line of rest){
+    if(isDayHeader(line)){
+      dayBlocks.push({header: parseDayHeader(line), lines:[]});
+    } else if(dayBlocks.length > 0 && line !== ''){
+      dayBlocks[dayBlocks.length-1].lines.push(line);
+    }
+  }
+
+  const days = {};
+  for(const block of dayBlocks){
+    const key = dayKey(block.header.name);
+    if(key) days[key] = parseDayBlock(block.header, block.lines);
+  }
+
+  // Propagate vikar flags from general note text
+  const gnText = generalNote.text || '';
+  [{key:'mon',re:/mandag/i},{key:'tue',re:/tirsdag/i},{key:'wed',re:/onsdag/i},
+   {key:'thu',re:/torsdag/i},{key:'fri',re:/fredag/i}].forEach(({key,re})=>{
+    const sentences = gnText.split(/[.\n]/).filter(s => re.test(s));
+    if(sentences.some(s => hasVikar(s)) && days[key]){
+      days[key].vikarFromNote = true;
+    }
+  });
+
+  return {generalNote, days};
+}
+
+function parseDayBlock(header, lines){
+  // ── Step 1: find the per-day schedule block ──
+  // Detect the start using the time line pattern alone — the code line
+  // may be skipped (BHK, ST) but the boundary is still the first time line
+  // followed by ANY code-shaped line (03Y XXX ...).
+  const CODE_SHAPE = /^[0-9A-ZÆØÅ]{2,4}\s+[A-ZÆØÅ\/]{2,5}\b/i;
+  let schedStart = -1;
+  for(let i = 0; i < lines.length - 1; i++){
+    if(asTimeLine(lines[i]) && CODE_SHAPE.test(lines[i+1])){
+      schedStart = i;
+      break;
+    }
+  }
+
+  const contentLines = schedStart >= 0 ? lines.slice(0, schedStart) : lines;
+  const schedLines   = schedStart >= 0 ? lines.slice(schedStart) : [];
+
+  // ── Step 2: build lesson slots from schedule block ──
+  const rawSlots = [];
+  const freeSlots = []; // collect FRI slots separately with their times
+  for(let i = 0; i < schedLines.length - 1; i++){
+    const time = asTimeLine(schedLines[i]);
+    if(time){
+      const name = resolveCodeLine(schedLines[i+1]);
+      if(name === '__FREE__'){ freeSlots.push(time); i++; }
+      else if(name){ rawSlots.push({time, name}); i++; }
+    }
+  }
+
+  // Merge consecutive same-subject slots
+  const slots = [];
+  for(const s of rawSlots){
+    const prev = slots[slots.length-1];
+    if(prev && prev.name === s.name){
+      prev.time = prev.time.split('–')[0].trim() + ' – ' + s.time.split('–')[1].trim();
+    } else {
+      slots.push({...s});
+    }
+  }
+
+  // ── Step 3: parse subject sections from content lines ──
+  // A subject header must EITHER match a known subject name from the
+  // schedule slots, OR match a known alias. We do NOT use a general
+  // heuristic — it causes false positives on long descriptions.
+  const knownSubjectNames = new Set(slots.map(s => s.name.toLowerCase()));
+  const ALIASES = {
+    'kirketime/trivselstime': 'trivsel',
+    'trivsel/klassenstime':   'trivsel',
+    'kirketime':              'trivsel',
+    'natur/teknologi':        'natur/teknologi',
+    'naturtekn':              'natur/teknologi',
+  };
+
+  function isSubjectHeader(line){
+    const ll = line.toLowerCase().trim();
+    const aliased = ALIASES[ll] || ll;
+    return knownSubjectNames.has(aliased) || knownSubjectNames.has(ll);
+  }
+
+  const sections = [];
+  let curHeading = null, curLines = [];
+
+  function flushSection(){
+    if(curHeading !== null) sections.push({heading: curHeading, text: curLines.join('\n').trim()});
+    curHeading = null; curLines = [];
+  }
+
+  for(const line of contentLines){
+    if(isSubjectHeader(line)){
+      flushSection();
+      curHeading = line;
+    } else {
+      if(curHeading !== null) curLines.push(line);
+    }
+  }
+  flushSection();
+
+  // Build lookup: normalised subject → array of sections (same subject can appear multiple times)
+  function norm(s){ return s.toLowerCase().replace(/[^a-zæøå\/]/g,''); }
+  const sectionMap = {}; // key → [section, ...]
+  for(const sec of sections){
+    const k = ALIASES[norm(sec.heading)] || norm(sec.heading);
+    if(!sectionMap[k]) sectionMap[k] = [];
+    sectionMap[k].push(sec);
+  }
+
+  // ── Step 4: match slots to sections ──
+  // Track how many times each key has been consumed so repeated subjects
+  // (e.g. two Dansk blocks) each get their own description in order.
+  const consumedCount = {};
+  const lessons = slots.map(slot => {
+    const slotNorm = norm(slot.name);
+    let matched = null;
+
+    for(const [k, secArr] of Object.entries(sectionMap)){
+      if(k === slotNorm ||
+         (k.length >= 4 && slotNorm.startsWith(k.slice(0,4))) ||
+         (slotNorm.length >= 4 && k.startsWith(slotNorm.slice(0,4))) ||
+         k.includes(slotNorm) || slotNorm.includes(k)){
+        const idx = consumedCount[k] || 0;
+        if(idx < secArr.length){
+          matched = secArr[idx];
+          consumedCount[k] = idx + 1;
+        }
+        break;
+      }
+    }
+
+    const desc = matched ? matched.text : '';
+    return {
+      time:    slot.time,
+      subject: slot.name,
+      desc,
+      vikar: hasVikar(desc) || hasVikar(matched ? matched.heading : ''),
+    };
+  });
+
+  // ── Step 5: check for special day and capture unmatched content ──
+  const allText = contentLines.join(' ');
+  const isSpecial = /pædagogisk dag|skolefri|fritten fra kl/i.test(allText);
+
+  // Collect content lines that didn't belong to any matched subject section
+  // This covers days like "PÆDAGOGISK DAG FOR LÆRERE" where the heading
+  // isn't a known subject — preserve everything as a free-text note
+  const unmatchedLines = [];
+  if(!isSpecial){
+    let inUnmatched = true;
+    for(const line of contentLines){
+      if(isSubjectHeader(line)){ inUnmatched = false; }
+      else if(inUnmatched){ unmatchedLines.push(line); }
+    }
+  }
+
+  // Add free slots as proper lesson entries so they always show with their time
+  const freeEntries = freeSlots.map(time => ({
+    time, subject: 'Fri', desc: '', vikar: false, isFree: true,
+  }));
+  // Insert free entries at the front (they're typically the first slot of the day)
+  const allLessons = [...freeEntries, ...lessons];
+
+  // For special days, use all content lines as the description
+  const specialDesc = isSpecial ? contentLines.join('\n').trim() : null;
+  const freeNote = !isSpecial && unmatchedLines.length > 0
+    ? unmatchedLines.join('\n').trim()
+    : null;
+
+  return {
+    name:   header.name,
+    date:   header.date,
+    lessons: allLessons,
+    vikar:  hasVikar(allText),
+    special: specialDesc,
+    freeNote,
+    vikarFromNote: false,
+  };
+}
+
+// ── GENERAL NOTE PARSER ──────────────────────────────────
+function parseGeneralNote(lines){
+  lines = lines.filter(l => l.length > 0);
+  if(!lines.length) return {text:'', signature:''};
+
+  // Find signature line
+  let sigIdx = -1;
+  for(let i=lines.length-1;i>=0;i--){
+    if(/mange knus|med venlig|hilsen|vel mødt|knus fra/i.test(lines[i])){sigIdx=i;break;}
+  }
+
+  // Strip the top table lines — they look like time slots or day names
+  // Keep everything from the first greeting/intro line onwards
+  const introStart = lines.findIndex(l =>
+    /^(kære|hej\s|tak for|i denne uge|vi glæder)/i.test(l)
+  );
+  const bodyStart = introStart >= 0 ? introStart : 0;
+  const bodyEnd   = sigIdx >= 0 ? sigIdx : lines.length;
+
+  const bodyLines = lines.slice(bodyStart, bodyEnd);
+  const sig = sigIdx >= 0 ? lines[sigIdx] : '';
+
+  // Return original text with line breaks preserved
+  return {
+    text: bodyLines.join('\n').trim(),
+    signature: sig,
+  };
+}
+
+// ── RENDER ───────────────────────────────────────────────
+const DAY_ORDER=['mon','tue','wed','thu','fri'];
+const DAY_LABEL={mon:'Mandag',tue:'Tirsdag',wed:'Onsdag',thu:'Torsdag',fri:'Fredag'};
+
+function renderPage(data, meta){
+  const gn = data.generalNote;
+  let gnHTML = '';
+  if(gn.text && gn.text.trim().length > 0){
+    const textHTML = esc(gn.text).replace(/\n/g,'<br>');
+    gnHTML=`<div class="gnote"><span class="gnote-label">📣 Fra lærerne:</span><div class="gnote-body">${textHTML}</div></div>`;
+  }
+
+  const footerHTML = gn.signature ? `<div class="footer">${esc(gn.signature)}</div>` : '';
+
+  const daysHTML = DAY_ORDER.map(key=>{
+    const day = data.days[key];
+    const name = day ? day.name : DAY_LABEL[key];
+    const date = day ? day.date : '';
+    let bodyHTML = '';
+
+    if(!day){
+      bodyHTML=`<div class="special-day"><div class="sp-icon">📭</div><div class="sp-label">Ingen info</div></div>`;
+    } else if(day.special){
+      bodyHTML=`<div class="special-day">
+        <div class="sp-icon">🏖️</div>
+        <div class="sp-label">Særlig dag</div>
+        <div class="sp-desc">${esc(day.special).replace(/\n/g,'<br>')}</div>
+      </div>`;
+    } else if(day.lessons.filter(l => !l.isFree).length === 0){
+      // Activity-only day (0. grade): render freeNote as a large readable bullet list
+      const freeEntry = day.lessons.find(l => l.isFree);
+      const activities = day.freeNote
+        ? day.freeNote.split('\n').map(l=>l.trim()).filter(l=>l.length>0)
+        : [];
+      const freeItem = freeEntry
+        ? `<div class="activity-item activity-free"><span class="activity-text">🔔 Fri lektion – ${esc(freeEntry.time)}</span></div>`
+        : '';
+      if(freeEntry || activities.length > 0){
+        const items = activities.map(a =>
+          `<div class="activity-item"><span class="activity-text">${esc(a)}</span></div>`
+        ).join('');
+        bodyHTML=`<div class="activity-body">${freeItem}${items}</div>`;
+      } else {
+        bodyHTML=`<div class="special-day"><div class="sp-icon">📝</div><div class="sp-label">Se generel info</div></div>`;
+      }
+    } else {
+      const dayVikar = day.vikar || day.vikarFromNote;
+      const freeNoteHTML = day.freeNote
+        ? `<div class="free-note">${esc(day.freeNote).replace(/\n/g,'<br>')}</div>`
+        : '';
+      const lessonsHTML = day.lessons.map(l=>{
+        const lv = l.vikar || dayVikar;
+        if(l.isFree){
+          return `<div class="lesson lesson-free">
+            <span class="ltime">${esc(l.time)}</span>
+            <span class="lsubject">🔔 Fri lektion</span>
+          </div>`;
+        }
+        const hasDesc = l.desc && l.desc.trim().length > 0;
+        return `<div class="lesson">
+          <span class="ltime">${esc(l.time)}</span>
+          <span class="lsubject">${esc(l.subject)}</span>
+          ${lv ? '<span class="vikar-badge">👤 Vikar</span>' : ''}
+          ${hasDesc
+            ? `<span class="ldesc">${esc(l.desc).replace(/\n/g,'<br>')}</span>`
+            : `<span class="ldesc empty">Ingen besked for timen</span>`}
+        </div>`;
+      }).join('');
+      bodyHTML=`<div class="day-body">${freeNoteHTML}${lessonsHTML}</div>`;
+    }
+
+    return `<div class="day-col ${key}">
+      <div class="day-hdr"><div class="dname">${esc(name)}</div><div class="ddate">${esc(date)}</div></div>
+      ${bodyHTML}
+    </div>`;
+  }).join('');
+
+  return `<div class="page">
+    <div class="hdr">
+      <div>
+        <div class="hdr-title">Ugeplan ${esc(meta.cls)} ${meta.emoji}</div>
+        <div class="hdr-sub">${esc(meta.dateRange)}</div>
+      </div>
+      <div class="hdr-badge">Uge ${esc(meta.week)}</div>
+    </div>
+    ${gnHTML}
+    <div class="days-row">${daysHTML}</div>
+    ${footerHTML}
+  </div>`;
+}
+
+// ── ENTRY POINT ──────────────────────────────────────────
+function buildPlan(){
+  const raw = document.getElementById('rawInput').value.trim();
+  if(!raw){setStatus('Indsæt tekst fra Aula først 😊','error');return;}
+
+  let cls       = document.getElementById('metaClass').value.trim();
+  let week      = document.getElementById('metaWeek').value.trim();
+  let dateRange = document.getElementById('metaDateRange').value.trim();
+  if(!week){const m=raw.match(/uge\s+(\d{1,2})/i);if(m)week=m[1];}
+  if(!cls) {const m=raw.match(/\b([0-9][A-ZÆØÅ])\b/);if(m)cls=m[1];}
+
+  try{
+    const data = parseAula(raw);
+    if(Object.keys(data.days).length===0){
+      setStatus('Kunne ikke finde dagssektioner – tjek at teksten indeholder "Mandag 20. apr." osv.','error');
+      return;
+    }
+
+    const frame = document.createElement('div');
+    frame.className='a4-frame';
+    frame.innerHTML = renderPage(data,{cls,week,dateRange,emoji:randomEmoji()});
+
+    const wrapper = document.createElement('div');
+    wrapper.className='a4-scale-wrapper';
+    wrapper.appendChild(frame);
+
+    const section = document.getElementById('previewSection');
+    section.innerHTML='';
+    section.appendChild(wrapper);
+
+    requestAnimationFrame(()=>{
+      // ── Adaptive font scaling ──
+      // For lesson days: start at base and step down if overflowing.
+      // For activity days: start at base and step UP as long as content fits,
+      // to make full use of the available column space.
+
+      const hasLessons  = frame.querySelectorAll('.day-body').length > 0;
+      const hasActivity = frame.querySelectorAll('.activity-body').length > 0;
+
+      if(hasLessons){
+        const BASE_SUBJ = 11.5, BASE_DESC = 10, BASE_TIME = 8.5, BASE_FREE = 10;
+        const MIN_SUBJ  = 8,    MIN_DESC  = 7;
+        const STEP = 0.5;
+
+        function setLesson(subj, desc, time, free){
+          frame.querySelectorAll('.lsubject').forEach(el => el.style.fontSize = subj+'px');
+          frame.querySelectorAll('.ldesc').forEach(el    => el.style.fontSize = desc+'px');
+          frame.querySelectorAll('.ltime').forEach(el    => el.style.fontSize = time+'px');
+          frame.querySelectorAll('.free-note').forEach(el=> el.style.fontSize = free+'px');
+        }
+        function lessonsFit(){
+          return Array.from(frame.querySelectorAll('.day-body')).every(
+            el => el.scrollHeight <= el.clientHeight + 2
+          );
+        }
+
+        let subj=BASE_SUBJ, desc=BASE_DESC, time=BASE_TIME, free=BASE_FREE;
+        setLesson(subj, desc, time, free);
+        for(let i=0; i<20; i++){
+          if(lessonsFit()) break;
+          subj = Math.max(MIN_SUBJ, subj-STEP);
+          desc = Math.max(MIN_DESC, desc-STEP);
+          time = Math.max(MIN_DESC, time-STEP*0.5);
+          free = Math.max(MIN_DESC, free-STEP);
+          setLesson(subj, desc, time, free);
+        }
+      }
+
+      if(hasActivity){
+        // Scale activity text up to fill the column, then back off if overflow
+        const MAX_ACT = 22, MIN_ACT = 10;
+        function setActivity(sz){
+          frame.querySelectorAll('.activity-text').forEach(el => el.style.fontSize = sz+'px');
+          // Also scale the bullet dot proportionally
+          frame.querySelectorAll('.activity-item').forEach(el => el.style.fontSize = sz+'px');
+        }
+        function activityFit(){
+          return Array.from(frame.querySelectorAll('.activity-body')).every(
+            el => el.scrollHeight <= el.clientHeight + 2
+          );
+        }
+
+        // Step up from base until overflow, then step back one
+        let sz = 13;
+        setActivity(sz);
+        while(sz < MAX_ACT && activityFit()){
+          sz += 0.5;
+          setActivity(sz);
+        }
+        // Step back one if we overshot
+        if(!activityFit()){
+          sz = Math.max(MIN_ACT, sz - 0.5);
+          setActivity(sz);
+        }
+      }
+
+      // ── Scale wrapper to fit screen ──
+      const W=frame.offsetWidth, H=frame.offsetHeight;
+      const avail=section.clientWidth-16;
+      const scale=Math.min(1,avail/W);
+      wrapper.style.transform='scale('+scale+')';
+      wrapper.style.transformOrigin='top left';
+      wrapper.style.width=W+'px';
+      wrapper.style.height=H+'px';
+      wrapper.style.marginRight=(W*scale-W)+'px';
+      wrapper.style.marginBottom=(H*scale-H)+'px';
+    });
+
+    document.getElementById('printBtn').classList.remove('hidden');
+    setStatus('✅ Ugeplan struktureret!','done');
+  } catch(err){
+    console.error(err);
+    setStatus('Fejl ved parsing – prøv igen.','error');
+  }
+}
+
+function setStatus(msg,type){
+  const el=document.getElementById('status');
+  el.textContent=msg;
+  el.className='status '+(type||'');
+}
+
+function clearAll(){
+  ['metaClass','metaWeek','metaDateRange'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rawInput').value='';
+  document.getElementById('previewSection').innerHTML=`
+    <div class="preview-placeholder">
+      <div class="big-emoji">📋</div>
+      <h2>Klar til ugeplan</h2>
+      <p>Indsæt teksten fra Aula og tryk "Strukturér ugeplan".</p>
+    </div>`;
+  document.getElementById('printBtn').classList.add('hidden');
+  setStatus('');
+}
+
+document.getElementById('rawInput').addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter') buildPlan();
+});
+</script>
+</body>
+</html>
