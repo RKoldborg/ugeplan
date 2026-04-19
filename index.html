@@ -509,7 +509,7 @@ function renderPage(data, meta){
           ${lv ? '<span class="vikar-badge">👤 Vikar</span>' : ''}
           ${hasDesc
             ? `<span class="ldesc">${esc(l.desc).replace(/\n/g,'<br>')}</span>`
-            : `<span class="ldesc empty">Ingen besked for timen</span>`}
+            : `<span class="ldesc empty">Ingen besked fra læreren</span>`}
         </div>`;
       }).join('');
       bodyHTML=`<div class="day-body">${freeNoteHTML}${lessonsHTML}</div>`;
