@@ -137,13 +137,13 @@ textarea:focus{border-color:var(--tue);}
     <input class="meta-input" id="metaWeek"      placeholder="Uge (fx 17)" type="number" />
     <input class="meta-input" id="metaDateRange" placeholder="fx 20.–24. april" style="width:200px"/>
   </div>
-  <textarea id="rawInput" placeholder="Indsæt hele ugeplanen fra Aula her 📋"></textarea>
+  <textarea id="rawInput" placeholder="Indsæt hele ugeplanen fra SkoleIntra her 📋"></textarea>
   <div class="actions">
     <button class="btn primary" onclick="buildPlan()">📐 Strukturér ugeplan</button>
     <span class="status" id="status"></span>
   </div>
   <div class="hint">
-    <strong>Sådan gør du:</strong> Kopier al tekst fra Aula-ugeplanen og indsæt herover – inkl. introduktionsteksten og alle dagsbeskrivelser.<br>
+    <strong>Sådan gør du:</strong> Kopier al tekst fra SkoleIntra-ugeplanen og indsæt herover – inkl. introduktionsteksten og alle dagsbeskrivelser.<br>
     Teksten reorganiseres direkte uden AI. <strong>Genvej:</strong> Ctrl/Cmd + Enter.
   </div>
 </div>
@@ -152,7 +152,7 @@ textarea:focus{border-color:var(--tue);}
   <div class="preview-placeholder">
     <div class="big-emoji">📋</div>
     <h2>Klar til ugeplan</h2>
-    <p>Indsæt teksten fra Aula og tryk "Strukturér ugeplan".</p>
+    <p>Indsæt teksten fra SkoleIntra og tryk "Strukturér ugeplan".</p>
   </div>
 </div>
 
@@ -219,7 +219,7 @@ function dayKey(name){
 function hasVikar(text){ return /\bvikar\b|jeg er væk|har fri\b|jeg er på tur|begge er væk/i.test(text); }
 
 // ── MAIN PARSER ──────────────────────────────────────────
-function parseAula(raw){
+function parseSkoleIntra(raw){
   const lines = raw.split('\n').map(l => l.trim());
 
   // Split into preamble and per-day blocks
@@ -538,7 +538,7 @@ function renderPage(data, meta){
 // ── ENTRY POINT ──────────────────────────────────────────
 function buildPlan(){
   const raw = document.getElementById('rawInput').value.trim();
-  if(!raw){setStatus('Indsæt tekst fra Aula først 😊','error');return;}
+  if(!raw){setStatus('Indsæt tekst fra SkoleIntra først 😊','error');return;}
 
   let cls       = document.getElementById('metaClass').value.trim();
   let week      = document.getElementById('metaWeek').value.trim();
@@ -547,7 +547,7 @@ function buildPlan(){
   if(!cls) {const m=raw.match(/\b([0-9][A-ZÆØÅ])\b/);if(m)cls=m[1];}
 
   try{
-    const data = parseAula(raw);
+    const data = parseSkoleIntra(raw);
     if(Object.keys(data.days).length===0){
       setStatus('Kunne ikke finde dagssektioner – tjek at teksten indeholder "Mandag 20. apr." osv.','error');
       return;
@@ -664,7 +664,7 @@ function clearAll(){
     <div class="preview-placeholder">
       <div class="big-emoji">📋</div>
       <h2>Klar til ugeplan</h2>
-      <p>Indsæt teksten fra Aula og tryk "Strukturér ugeplan".</p>
+      <p>Indsæt teksten fra SkoleIntra og tryk "Strukturér ugeplan".</p>
     </div>`;
   document.getElementById('printBtn').classList.add('hidden');
   setStatus('');
