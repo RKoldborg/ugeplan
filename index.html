@@ -44,6 +44,21 @@ textarea:focus{border-color:var(--tue);}
 .status.error{color:var(--accent);}
 .status.done{color:var(--thu);}
 
+.site-footer {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+  width: 100%;
+}
+.site-footer a {
+  color: var(--muted);
+  text-decoration: underline;
+}
+
 .preview-section{flex:1;background:#2a2a3e;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px;overflow-y:auto;width:100%;}
 .preview-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:60px 40px;}
 .preview-placeholder .big-emoji{font-size:56px;}
@@ -169,7 +184,12 @@ textarea:focus{border-color:var(--tue);}
     <p>Indsæt teksten fra SkoleIntra og tryk "Strukturér ugeplan".</p>
   </div>
 </div>
-
+<div class="site-footer">
+  Ugeplanen genereres direkte fra den tekst du indsætter og kan indeholde fejl eller mangler.
+  Tjek altid den originale ugeplan på SkoleIntra ved tvivl.<br>
+  Stillet gratis til rådighed som den er og forefindes · Lavet af Rune Koldborg J ·
+  <a href="https://github.com/RKoldborg/ugeplan" target="_blank">Kildekode på GitHub</a>
+</div>
 </div><!-- end page-wrap -->
 
 <script>
