@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ugeplan – A4 Print</title>
+<title>Ugeplan â€“ A4 Print</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Andika:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -16,7 +16,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Andika',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
 
-/* ── Max width wrapper ── */
+/* â”€â”€ Max width wrapper â”€â”€ */
 .page-wrap{width:100%;max-width:1200px;display:flex;flex-direction:column;flex:1;background: var(--panel);box-shadow: 0px 0px 0px 1px var(--border);}
 
 .top-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;width:100%;}
@@ -155,57 +155,57 @@ textarea:focus{border-color:var(--tue);}
 <div class="page-wrap">
 
 <div class="top-bar">
-  <div class="top-bar-title">📅 Ugeplan – <span>A4 Print</span></div>
-  <button class="btn" onclick="clearAll()">✕ Ryd</button>
-  <button class="btn primary hidden" id="printBtn" onclick="window.print()">🖨️ Udskriv / PDF</button>
+  <div class="top-bar-title">ðŸ“… Ugeplan â€“ <span>A4 Print</span></div>
+  <button class="btn" onclick="clearAll()">âœ• Ryd</button>
+  <button class="btn primary hidden" id="printBtn" onclick="window.print()">ðŸ–¨ï¸ Udskriv / PDF</button>
 </div>
 
 <div class="input-section">
   <div class="tagline">
-    Begrænse brugen af skærme og giv børnene deres egen ugeplan – som kan hænges i et fællesområde.
-    <button class="help-pill" id="helpToggle" onclick="toggleHelp()">❓ Hvordan bruger jeg siden?</button>
-    <button class="help-pill" onclick="openVideo()" style="border-color:#e94560;color:#e94560;">▶ Se videovejledning</button>
+    BegrÃ¦nse brugen af skÃ¦rme og giv bÃ¸rnene deres egen ugeplan â€“ som kan hÃ¦nges i et fÃ¦llesomrÃ¥de.
+    <button class="help-pill" id="helpToggle" onclick="toggleHelp()">â“ Hvordan bruger jeg siden?</button>
+    <button class="help-pill" onclick="openVideo()" style="border-color:#e94560;color:#e94560;">â–¶ Se videovejledning</button>
   </div>
   <div class="hint" id="helpSection" style="display:none">
-    <strong>Sådan bruger du siden:</strong><br><br>
-    Siden omdanner den rå tekst fra SkoleIntra til en overskuelig ugeplan klar til print.<br><br>
-    <strong>1. Åbn SkoleIntra i mobilvisning</strong><br>
-    Gør browservinduet smallere (eller brug din telefon), så siden skifter til mobilvisning med harmonika-menuer.<br><br>
-    <strong>2. Åbn alle afsnit</strong><br>
-    Tryk på <em>Generelt</em> og alle ugedagene, så hele ugeplanen er synlig. <em>Tip: start nedefra og arbejd opad – så går det hurtigst!</em><br><br>
+    <strong>SÃ¥dan bruger du siden:</strong><br><br>
+    Siden omdanner den rÃ¥ tekst fra SkoleIntra til en overskuelig ugeplan klar til print.<br><br>
+    <strong>1. Ã…bn SkoleIntra i mobilvisning</strong><br>
+    GÃ¸r browservinduet smallere (eller brug din telefon), sÃ¥ siden skifter til mobilvisning med harmonika-menuer.<br><br>
+    <strong>2. Ã…bn alle afsnit</strong><br>
+    Tryk pÃ¥ <em>Generelt</em> og alle ugedagene, sÃ¥ hele ugeplanen er synlig. <em>Tip: start nedefra og arbejd opad â€“ sÃ¥ gÃ¥r det hurtigst!</em><br><br>
     <strong>3. Kopier al tekst</strong><br>
-    Vælg alt på siden <strong>(Ctrl/Cmd+A)</strong> og kopier <strong>(Ctrl/Cmd+C)</strong>.<br><br>
-    <strong>4. Indsæt og generer</strong><br>
-    Sæt teksten ind i feltet herunder <strong>(Ctrl/Cmd + V)</strong> og tryk "Strukturér ugeplan" – eller brug <strong>Ctrl/Cmd + Enter</strong>.<br><br>
+    VÃ¦lg alt pÃ¥ siden <strong>(Ctrl/Cmd+A)</strong> og kopier <strong>(Ctrl/Cmd+C)</strong>.<br><br>
+    <strong>4. IndsÃ¦t og generer</strong><br>
+    SÃ¦t teksten ind i feltet herunder <strong>(Ctrl/Cmd + V)</strong> og tryk "StrukturÃ©r ugeplan" â€“ eller brug <strong>Ctrl/Cmd + Enter</strong>.<br><br>
     <strong>5. Print eller gem som PDF</strong><br>
-    Tryk på 🖨️ Udskriv / PDF og print eller gem som PDF. 
+    Tryk pÃ¥ ðŸ–¨ï¸ Udskriv / PDF og print eller gem som PDF. 
   </div>
-  <textarea id="rawInput" placeholder="Indsæt hele ugeplanen fra SkoleIntra her 📋 - husk at kopiér fra mobilvisningen af SkoleIntra (visningen med harmonika-menuen)"></textarea>
+  <textarea id="rawInput" placeholder="IndsÃ¦t hele ugeplanen fra SkoleIntra her ðŸ“‹ - husk at kopiÃ©r fra mobilvisningen af SkoleIntra (visningen med harmonika-menuen)"></textarea>
   <div class="actions">
-    <button class="btn primary" onclick="buildPlan()">📐 Strukturér ugeplan</button>
+    <button class="btn primary" onclick="buildPlan()">ðŸ“ StrukturÃ©r ugeplan</button>
     <span class="status" id="status"></span>
   </div>
 </div>
 
 <div class="preview-section" id="previewSection">
   <div class="preview-placeholder">
-    <div class="big-emoji">📋</div>
+    <div class="big-emoji">ðŸ“‹</div>
     <h2>Klar til ugeplan</h2>
-    <p>Indsæt teksten fra SkoleIntra og tryk "Strukturér ugeplan".</p>
+    <p>IndsÃ¦t teksten fra SkoleIntra og tryk "StrukturÃ©r ugeplan".</p>
   </div>
 </div>
 <div class="site-footer">
-  Ugeplanen genereres direkte fra den tekst du indsætter og kan indeholde fejl eller mangler.
-  Tjek altid den originale ugeplan på SkoleIntra ved tvivl.<br>
-  Stillet gratis til rådighed som den er og forefindes · Lavet af Rune Koldborg J ·
-  <a href="https://github.com/RKoldborg/ugeplan" target="_blank">Kildekode på GitHub</a>
+  Ugeplanen genereres direkte fra den tekst du indsÃ¦tter og kan indeholde fejl eller mangler.
+  Tjek altid den originale ugeplan pÃ¥ SkoleIntra ved tvivl.<br>
+  Stillet gratis til rÃ¥dighed som den er og forefindes Â· Lavet af Rune Koldborg J Â·
+  <a href="https://github.com/RKoldborg/ugeplan" target="_blank">Kildekode pÃ¥ GitHub</a>
 </div>
 </div><!-- end page-wrap -->
 
 <!-- Video modal -->
 <div class="modal-overlay" id="videoModal" onclick="closeVideoOnBackdrop(event)">
   <div class="modal-box">
-    <button class="modal-close" onclick="closeVideo()">✕</button>
+    <button class="modal-close" onclick="closeVideo()">âœ•</button>
     <iframe id="videoFrame" src="" allowfullscreen allow="autoplay"></iframe>
   </div>
 </div>
@@ -213,7 +213,7 @@ textarea:focus{border-color:var(--tue);}
 <script>
 'use strict';
 
-const EMOJIS = ['🌸','🌻','🌈','⭐','🦋','🌊','🍀','🌙','🎨','🎵','🌿','🦊','🐝','🎪','🌺','🍁','🎭','🧩','🎈','🌍'];
+const EMOJIS = ['ðŸŒ¸','ðŸŒ»','ðŸŒˆ','â­','ðŸ¦‹','ðŸŒŠ','ðŸ€','ðŸŒ™','ðŸŽ¨','ðŸŽµ','ðŸŒ¿','ðŸ¦Š','ðŸ','ðŸŽª','ðŸŒº','ðŸ','ðŸŽ­','ðŸ§©','ðŸŽˆ','ðŸŒ'];
 function randomEmoji(){ return EMOJIS[Math.floor(Math.random()*EMOJIS.length)]; }
 
 function esc(s){
@@ -223,17 +223,17 @@ function esc(s){
 
 const SUBJ_CODE = {
   DAN:'Dansk', MAT:'Matematik', ENG:'Engelsk', MUS:'Musik',
-  IDR:'Idræt', KUN:'Kunst', HIS:'Historie', REL:'Religion',
+  IDR:'IdrÃ¦t', KUN:'Kunst', HIS:'Historie', REL:'Religion',
   'N/T':'Natur/teknologi', NAT:'Natur/teknologi', GEO:'Geografi',
   BIO:'Biologi', FYS:'Fysik/kemi', SAM:'Samfundsfag',
   TYS:'Tysk', FRA:'Fransk', TRIV:'Trivsel', FRI:'Fri', SFO:'SFO',
 };
 
-const SKIP_CODES = new Set(['BHK','ST','STØ']);
+const SKIP_CODES = new Set(['BHK','ST','STÃ˜']);
 const FREE_CODES = new Set(['FRI']);
 
 function resolveCodeLine(line){
-  const m = line.trim().match(/^[0-9A-ZÆØÅ]{2,4}\s+([A-ZÆØÅ\/]{2,5})\b/i);
+  const m = line.trim().match(/^[0-9A-ZÃ†Ã˜Ã…]{2,4}\s+([A-ZÃ†Ã˜Ã…\/]{2,5})\b/i);
   if(!m) return null;
   const code = m[1].toUpperCase();
   if(SKIP_CODES.has(code)) return null;
@@ -242,8 +242,8 @@ function resolveCodeLine(line){
 }
 
 function asTimeLine(line){
-  const m = line.trim().match(/^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/);
-  return m ? `${m[1]} – ${m[2]}` : null;
+  const m = line.trim().match(/^(\d{1,2}:\d{2})\s*[-â€“]\s*(\d{1,2}:\d{2})$/);
+  return m ? `${m[1]} â€“ ${m[2]}` : null;
 }
 
 const DAY_HDR_RE = /^(Mandag|Tirsdag|Onsdag|Torsdag|Fredag)\s+(\d{1,2}\.?\s*\w+\.?.*)/i;
@@ -263,7 +263,7 @@ function dayKey(name){
   return null;
 }
 
-function hasVikar(text){ return /\bvikar\b|jeg er væk|har fri\b|jeg er på tur|begge er væk/i.test(text); }
+function hasVikar(text){ return /\bvikar\b|jeg er vÃ¦k|har fri\b|jeg er pÃ¥ tur|begge er vÃ¦k/i.test(text); }
 
 function parseSkoleIntra(raw){
   const lines = raw.split('\n').map(l => l.trim());
@@ -287,18 +287,9 @@ function parseSkoleIntra(raw){
     if(key) days[key] = parseDayBlock(block.header, block.lines);
   }
 
-  const gnText = generalNote.text || '';
-  [{key:'mon',re:/mandag/i},{key:'tue',re:/tirsdag/i},{key:'wed',re:/onsdag/i},
-   {key:'thu',re:/torsdag/i},{key:'fri',re:/fredag/i}].forEach(({key,re})=>{
-    const sentences = gnText.split(/[.\n]/).filter(s => re.test(s));
-    if(sentences.some(s => hasVikar(s)) && days[key]){
-      days[key].vikarFromNote = true;
-    }
-  });
-
   // Auto-detect meta from raw text
   const weekMatch = raw.match(/uge\s+(\d{1,2})/i);
-  const clsMatch  = raw.match(/\b([0-9][A-ZÆØÅ])\b/);
+  const clsMatch  = raw.match(/\b([0-9][A-ZÃ†Ã˜Ã…])\b/);
   const meta = {
     week: weekMatch ? weekMatch[1] : '',
     cls:  clsMatch  ? clsMatch[1]  : '',
@@ -310,14 +301,14 @@ function parseSkoleIntra(raw){
   if(dayHeaders.length >= 2){
     const first = dayHeaders[0].date;
     const last  = dayHeaders[dayHeaders.length-1].date;
-    if(first && last) meta.dateRange = first + ' – ' + last;
+    if(first && last) meta.dateRange = first + ' â€“ ' + last;
   }
 
   return {generalNote, days, meta};
 }
 
 function parseDayBlock(header, lines){
-  const CODE_SHAPE = /^[0-9A-ZÆØÅ]{2,4}\s+[A-ZÆØÅ\/]{2,5}\b/i;
+  const CODE_SHAPE = /^[0-9A-ZÃ†Ã˜Ã…]{2,4}\s+[A-ZÃ†Ã˜Ã…\/]{2,5}\b/i;
   let schedStart = -1;
   for(let i = 0; i < lines.length - 1; i++){
     if(asTimeLine(lines[i]) && CODE_SHAPE.test(lines[i+1])){
@@ -344,7 +335,7 @@ function parseDayBlock(header, lines){
   for(const s of rawSlots){
     const prev = slots[slots.length-1];
     if(prev && prev.name === s.name){
-      prev.time = prev.time.split('–')[0].trim() + ' – ' + s.time.split('–')[1].trim();
+      prev.time = prev.time.split('â€“')[0].trim() + ' â€“ ' + s.time.split('â€“')[1].trim();
     } else {
       slots.push({...s});
     }
@@ -377,7 +368,7 @@ function parseDayBlock(header, lines){
   }
   flushSection();
 
-  function norm(s){ return s.toLowerCase().replace(/[^a-zæøå\/]/g,''); }
+  function norm(s){ return s.toLowerCase().replace(/[^a-zÃ¦Ã¸Ã¥\/]/g,''); }
   const sectionMap = {};
   for(const sec of sections){
     const k = ALIASES[norm(sec.heading)] || norm(sec.heading);
@@ -405,7 +396,7 @@ function parseDayBlock(header, lines){
   });
 
   const allText = contentLines.join(' ');
-  const isSpecial = /pædagogisk dag|skolefri|fritten fra kl/i.test(allText);
+  const isSpecial = /pÃ¦dagogisk dag|skolefri|fritten fra kl/i.test(allText);
 
   const unmatchedLines = [];
   if(!isSpecial){
@@ -426,7 +417,7 @@ function parseDayBlock(header, lines){
 
   return {
     name: header.name, date: header.date, lessons: allLessons,
-    vikar: hasVikar(allText), special: specialDesc, freeNote, vikarFromNote: false,
+    special: specialDesc, freeNote,
   };
 }
 
@@ -435,10 +426,10 @@ function parseGeneralNote(lines){
   if(!lines.length) return {text:'', signature:''};
   let sigIdx = -1;
   for(let i=lines.length-1;i>=0;i--){
-    if(/mange knus|med venlig|hilsen|vel mødt|knus fra/i.test(lines[i])){sigIdx=i;break;}
+    if(/mange knus|med venlig|hilsen|vel mÃ¸dt|knus fra/i.test(lines[i])){sigIdx=i;break;}
   }
   const introStart = lines.findIndex(l =>
-    /^(kære|hej\s|tak for|i denne uge|vi glæder)/i.test(l)
+    /^(kÃ¦re|hej\s|tak for|i denne uge|vi glÃ¦der)/i.test(l)
   );
   const bodyStart = introStart >= 0 ? introStart : 0;
   const bodyEnd   = sigIdx >= 0 ? sigIdx : lines.length;
@@ -455,7 +446,7 @@ function renderPage(data, meta){
   let gnHTML = '';
   if(gn.text && gn.text.trim().length > 0){
     const textHTML = esc(gn.text).replace(/\n/g,'<br>');
-    gnHTML=`<div class="gnote"><span class="gnote-label">📣 Fra lærerne:</span><div class="gnote-body">${textHTML}</div></div>`;
+    gnHTML=`<div class="gnote"><span class="gnote-label">ðŸ“£ Fra lÃ¦rerne:</span><div class="gnote-body">${textHTML}</div></div>`;
   }
   const footerHTML = gn.signature ? `<div class="footer">${esc(gn.signature)}</div>` : '';
 
@@ -466,11 +457,11 @@ function renderPage(data, meta){
     let bodyHTML = '';
 
     if(!day){
-      bodyHTML=`<div class="special-day"><div class="sp-icon">📭</div><div class="sp-label">Ingen info</div></div>`;
+      bodyHTML=`<div class="special-day"><div class="sp-icon">ðŸ“­</div><div class="sp-label">Ingen info</div></div>`;
     } else if(day.special){
       bodyHTML=`<div class="special-day">
-        <div class="sp-icon">🏖️</div>
-        <div class="sp-label">Særlig dag</div>
+        <div class="sp-icon">ðŸ–ï¸</div>
+        <div class="sp-label">SÃ¦rlig dag</div>
         <div class="sp-desc">${esc(day.special).replace(/\n/g,'<br>')}</div>
       </div>`;
     } else if(day.lessons.filter(l => !l.isFree).length === 0){
@@ -479,7 +470,7 @@ function renderPage(data, meta){
         ? day.freeNote.split('\n').map(l=>l.trim()).filter(l=>l.length>0)
         : [];
       const freeItem = freeEntry
-        ? `<div class="activity-item activity-free"><span class="activity-text">🔔 Fri lektion – ${esc(freeEntry.time)}</span></div>`
+        ? `<div class="activity-item activity-free"><span class="activity-text">ðŸ”” Fri lektion â€“ ${esc(freeEntry.time)}</span></div>`
         : '';
       if(freeEntry || activities.length > 0){
         const items = activities.map(a =>
@@ -487,28 +478,27 @@ function renderPage(data, meta){
         ).join('');
         bodyHTML=`<div class="activity-body">${freeItem}${items}</div>`;
       } else {
-        bodyHTML=`<div class="special-day"><div class="sp-icon">📝</div><div class="sp-label">Se generel info</div></div>`;
+        bodyHTML=`<div class="special-day"><div class="sp-icon">ðŸ“</div><div class="sp-label">Se generel info</div></div>`;
       }
     } else {
-      const dayVikar = day.vikar || day.vikarFromNote;
       const freeNoteHTML = day.freeNote
         ? `<div class="free-note">${esc(day.freeNote).replace(/\n/g,'<br>')}</div>` : '';
       const lessonsHTML = day.lessons.map(l=>{
-        const lv = l.vikar || dayVikar;
+        const lv = l.vikar;
         if(l.isFree){
           return `<div class="lesson lesson-free">
             <span class="ltime">${esc(l.time)}</span>
-            <span class="lsubject">🔔 Fri lektion</span>
+            <span class="lsubject">ðŸ”” Fri lektion</span>
           </div>`;
         }
         const hasDesc = l.desc && l.desc.trim().length > 0;
         return `<div class="lesson">
           <span class="ltime">${esc(l.time)}</span>
           <span class="lsubject">${esc(l.subject)}</span>
-          ${lv ? '<span class="vikar-badge">👤 Vikar</span>' : ''}
+          ${lv ? '<span class="vikar-badge">ðŸ‘¤ Vikar</span>' : ''}
           ${hasDesc
             ? `<span class="ldesc">${esc(l.desc).replace(/\n/g,'<br>')}</span>`
-            : `<span class="ldesc empty">Ingen besked fra læreren</span>`}
+            : `<span class="ldesc empty">Ingen besked fra lÃ¦reren</span>`}
         </div>`;
       }).join('');
       bodyHTML=`<div class="day-body">${freeNoteHTML}${lessonsHTML}</div>`;
@@ -552,17 +542,17 @@ function toggleHelp(){
   const open    = section.style.display === 'none';
   section.style.display = open ? 'block' : 'none';
   btn.classList.toggle('active', open);
-  btn.textContent = open ? '✕ Luk hjælp' : '❓ Hvordan bruger jeg siden?';
+  btn.textContent = open ? 'âœ• Luk hjÃ¦lp' : 'â“ Hvordan bruger jeg siden?';
 }
 
 function buildPlan(){
   const raw = document.getElementById('rawInput').value.trim();
-  if(!raw){setStatus('Indsæt tekst fra SkoleIntra først 😊','error');return;}
+  if(!raw){setStatus('IndsÃ¦t tekst fra SkoleIntra fÃ¸rst ðŸ˜Š','error');return;}
 
   try{
     const data = parseSkoleIntra(raw);
     if(Object.keys(data.days).length===0){
-      setStatus('Kunne ikke finde dagssektioner – tjek at teksten indeholder "Mandag 20. apr." osv.','error');
+      setStatus('Kunne ikke finde dagssektioner â€“ tjek at teksten indeholder "Mandag 20. apr." osv.','error');
       return;
     }
 
@@ -583,27 +573,39 @@ function buildPlan(){
       const hasActivity = frame.querySelectorAll('.activity-body').length > 0;
 
       if(hasLessons){
-        const BASE_SUBJ=11.5, BASE_DESC=10, BASE_TIME=8.5, BASE_FREE=10;
-        const MIN_SUBJ=8, MIN_DESC=7, STEP=0.5;
-        function setLesson(subj,desc,time,free){
+        // Sizes scale together proportionally from a shared ratio
+        const MAX_SUBJ=14, MIN_SUBJ=8, STEP=0.5;
+        // Offsets relative to subject size
+        const DESC_OFF=1.5, TIME_OFF=4, FREE_OFF=1.5, NOTE_OFF=1.5;
+
+        function setLesson(subj){
+          const desc = Math.max(7,  subj - DESC_OFF);
+          const time = Math.max(6,  subj - TIME_OFF);
+          const free = Math.max(7,  subj - FREE_OFF);
+          const note = Math.max(7,  subj - NOTE_OFF);
           frame.querySelectorAll('.lsubject').forEach(el=>el.style.fontSize=subj+'px');
           frame.querySelectorAll('.ldesc').forEach(el=>el.style.fontSize=desc+'px');
           frame.querySelectorAll('.ltime').forEach(el=>el.style.fontSize=time+'px');
           frame.querySelectorAll('.free-note').forEach(el=>el.style.fontSize=free+'px');
+          frame.querySelectorAll('.gnote-body,.gnote-label').forEach(el=>el.style.fontSize=note+'px');
         }
-        function lessonsFit(){
-          return Array.from(frame.querySelectorAll('.day-body')).every(
-            el=>el.scrollHeight<=el.clientHeight+2);
+
+        function allFit(){
+          // Day columns must not overflow
+          const daysFit = Array.from(frame.querySelectorAll('.day-body')).every(
+            el => el.scrollHeight <= el.clientHeight + 2);
+          // Gnote must not push the days row out of the page â€”
+          // check the page itself isn't overflowing
+          const pageFit = frame.scrollHeight <= frame.clientHeight + 2;
+          return daysFit && pageFit;
         }
-        let subj=BASE_SUBJ,desc=BASE_DESC,time=BASE_TIME,free=BASE_FREE;
-        setLesson(subj,desc,time,free);
-        for(let i=0;i<20;i++){
-          if(lessonsFit()) break;
-          subj=Math.max(MIN_SUBJ,subj-STEP);
-          desc=Math.max(MIN_DESC,desc-STEP);
-          time=Math.max(MIN_DESC,time-STEP*0.5);
-          free=Math.max(MIN_DESC,free-STEP);
-          setLesson(subj,desc,time,free);
+
+        // Start at max, step down until everything fits
+        let subj = MAX_SUBJ;
+        setLesson(subj);
+        while(!allFit() && subj > MIN_SUBJ){
+          subj = Math.max(MIN_SUBJ, subj - STEP);
+          setLesson(subj);
         }
       }
 
@@ -635,10 +637,10 @@ function buildPlan(){
     });
 
     document.getElementById('printBtn').classList.remove('hidden');
-    setStatus('✅ Ugeplan struktureret!','done');
+    setStatus('âœ… Ugeplan struktureret!','done');
   } catch(err){
     console.error(err);
-    setStatus('Fejl ved parsing – prøv igen.','error');
+    setStatus('Fejl ved parsing â€“ prÃ¸v igen.','error');
   }
 }
 
@@ -652,9 +654,9 @@ function clearAll(){
   document.getElementById('rawInput').value='';
   document.getElementById('previewSection').innerHTML=`
     <div class="preview-placeholder">
-      <div class="big-emoji">📋</div>
+      <div class="big-emoji">ðŸ“‹</div>
       <h2>Klar til ugeplan</h2>
-      <p>Indsæt teksten fra SkoleIntra og tryk "Strukturér ugeplan".</p>
+      <p>IndsÃ¦t teksten fra SkoleIntra og tryk "StrukturÃ©r ugeplan".</p>
     </div>`;
   document.getElementById('printBtn').classList.add('hidden');
   setStatus('');
