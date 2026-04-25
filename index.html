@@ -118,6 +118,7 @@ textarea:focus{border-color:var(--tue);}
 .a4-frame .lesson .lsubject{font-size:10px;font-weight:800;display:block;line-height:1.2;overflow-wrap:anywhere;}
 .a4-frame .lesson .ldesc{font-size:8.5px;font-weight:600;margin-top:2px;line-height:1.4;display:block;color:#444;overflow-wrap:anywhere;}
 .a4-frame .lesson .ldesc.empty{color:#bbb;font-style:italic;}
+.a4-frame .file-pill{display:inline-block;font-size:7px;font-weight:800;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:20px;padding:1px 7px;margin-top:2px;letter-spacing:.02em;}
 .a4-frame .free-note{font-size:8.5px;font-weight:600;color:#555;line-height:1.45;padding:3px 4px 4px;border-radius:6px;background:#f5f5f5;margin-bottom:2px;flex-shrink:0;}
 .a4-frame .vikar-badge{display:inline-block;font-size:7px;font-weight:800;background:#FECA57;color:#1a1000;border-radius:20px;padding:1px 6px;margin-top:2px;letter-spacing:.03em;}
 
@@ -499,7 +500,7 @@ function renderPage(data, meta){
           <span class="lsubject">${esc(l.subject)}</span>
           ${lv ? '<span class="vikar-badge">👤 Vikar</span>' : ''}
           ${hasDesc
-            ? `<span class="ldesc">${esc(l.desc).replace(/\n/g,'<br>')}</span>`
+            ? `<span class="ldesc">${formatDesc(l.desc)}</span>`
             : `<span class="ldesc empty">Ingen besked fra læreren</span>`}
         </div>`;
       }).join('');
@@ -545,6 +546,28 @@ function toggleHelp(){
   section.style.display = open ? 'block' : 'none';
   btn.classList.toggle('active', open);
   btn.textContent = open ? '✕ Luk hjælp' : '❓ Hvordan bruger jeg siden?';
+}
+
+function formatDesc(text){
+  if(!text) return '';
+  const FILE_ICONS = {
+    pdf:'📄', doc:'📄', docx:'📄', txt:'📄',
+    xls:'📊', xlsx:'📊',
+    ppt:'📊', pptx:'📊',
+    mp4:'📽️', mov:'📽️', avi:'📽️',
+    png:'🖼️', jpg:'🖼️', jpeg:'🖼️', gif:'🖼️',
+  };
+  // Match any line that looks like a filename: no spaces and has a .ext
+  const FILE_RE = /^\S+\.[a-z0-9]{2,5}$/i;
+  return text.split('\n').map(line => {
+    const l = line.trim();
+    const m = l.match(/\.([a-z0-9]+)$/i);
+    if(FILE_RE.test(l)){
+      const icon = (m && FILE_ICONS[m[1].toLowerCase()]) || '📎';
+      return `<span class="file-pill">${icon} Se SkoleIntra</span>`;
+    }
+    return esc(l);
+  }).join('<br>');
 }
 
 function buildPlan(){
