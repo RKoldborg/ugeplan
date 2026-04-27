@@ -77,19 +77,24 @@ textarea:focus{border-color:var(--tue);}
 
 .a4-scale-wrapper{display:block;transform-origin:top left;}
 .a4-frame{background:white;width:297mm;height:210mm;box-shadow:0 8px 40px rgba(0,0,0,.5);border-radius:3px;overflow:hidden;}
-.a4-frame .page{width:297mm;height:210mm;padding:7mm 8mm 6mm;background:var(--sched-bg);font-family:'Andika',sans-serif;color:var(--ink);display:flex;flex-direction:column;}
+.a4-frame .page{width:297mm;height:210mm;padding:7mm 8mm 6mm;background:none;font-family:'Andika',sans-serif;color:var(--ink);display:flex;flex-direction:column;}
 
 .a4-frame .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;padding-bottom:5px;border-bottom:3px solid var(--ink);flex-shrink:0;}
 .a4-frame .hdr-title{font-family:'Baloo 2',cursive;font-size:21px;line-height:1;}
 .a4-frame .hdr-sub{font-size:10px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
 .a4-frame .hdr-badge{background:var(--ink);color:white;font-family:'Baloo 2',cursive;font-size:17px;padding:3px 12px;border-radius:50px;}
 
-.a4-frame .gnote{background:#FFF3CD;border-left:4px solid #FECA57;border-radius:8px;padding:7px 12px 8px;font-size:10px;font-weight:600;line-height:1.6;margin-bottom:6px;flex-shrink:0;}
+.a4-frame .gnote{background:#FFF3CD;border-radius:8px;padding:7px 12px 8px;font-size:10px;font-weight:600;line-height:1.6;margin-bottom:6px;flex-shrink:0;}
 .a4-frame .gnote-label{font-size:10.5px;font-weight:800;display:block;margin-bottom:5px;color:#7a5800;}
 .a4-frame .gnote-body{columns:3;column-gap:14px;text-align:justify;line-height:1.6;orphans:2;widows:2;}
 
 .a4-frame .days-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-height:0;}
-.a4-frame .day-col{border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.09);background:white;display:flex;flex-direction:column;min-height:0;}
+.a4-frame .day-col{border-radius:10px;overflow:hidden;background:white;display:flex;flex-direction:column;min-height:0;}
+.a4-frame .day-col.mon {box-shadow: 0px 2px 1px 1px var(--mon);}
+.a4-frame .day-col.tue {box-shadow: 0px 2px 1px 1px var(--tue);}
+.a4-frame .day-col.wed {box-shadow: 0px 2px 1px 1px var(--wed);}
+.a4-frame .day-col.thu {box-shadow: 0px 2px 1px 1px var(--thu);}
+.a4-frame .day-col.fri {box-shadow: 0px 2px 1px 1px var(--fri);}
 .a4-frame .day-hdr{padding:5px 8px 4px;color:white;font-family:'Baloo 2',cursive;line-height:1.1;flex-shrink:0;}
 .a4-frame .day-hdr .dname{font-size:14px;}
 .a4-frame .day-hdr .ddate{font-size:9px;font-family:'Andika',sans-serif;font-weight:600;opacity:.85;}
@@ -108,14 +113,14 @@ textarea:focus{border-color:var(--tue);}
 .a4-frame .special-day .sp-desc{font-size:8px;color:#aaa;font-weight:600;line-height:1.4;}
 
 .a4-frame .lesson{border-radius:6px;padding:3px 5px 4px;flex-shrink:0;}
-.a4-frame .mon .lesson{background:#FFEEEE;border-left:3px solid var(--mon);}
-.a4-frame .tue .lesson{background:#FFF3E0;border-left:3px solid var(--tue);}
-.a4-frame .wed .lesson{background:#E8FAFE;border-left:3px solid var(--wed);}
-.a4-frame .thu .lesson{background:#E8FBF5;border-left:3px solid var(--thu);}
-.a4-frame .fri .lesson{background:#F0EEFF;border-left:3px solid var(--fri);}
+.a4-frame .mon .lesson{background:#FFEEEE;}
+.a4-frame .tue .lesson{background:#FFF3E0;}
+.a4-frame .wed .lesson{background:#E8FAFE;}
+.a4-frame .thu .lesson{background:#E8FBF5;}
+.a4-frame .fri .lesson{background:#F0EEFF;}
 .a4-frame .lesson .ltime{font-size:7.5px;font-weight:700;color:var(--ink);opacity:1;display:block;letter-spacing:.02em;}
 .a4-frame .lesson .lsubject{font-size:10px;font-weight:800;display:block;line-height:1.2;overflow-wrap:anywhere;}
-.a4-frame .double-badge{display:inline-block;font-size:6.5px;font-weight:900;background:var(--ink);color:white;border-radius:4px;padding:0px 3px;margin-left:4px;vertical-align:middle;line-height:1.6;letter-spacing:.03em;}
+.a4-frame .double-badge{display:inline-block;font-size:6.5px;font-weight:900;background:var(--ink);color:white;border-radius:4px;padding:0px 3px;margin-left:4px;vertical-align:middle;line-height:1.6;letter-spacing:.03em;margin-top:-2px;}
 .a4-frame .recess{display:flex;align-items:center;gap:5px;padding:3px 0;flex-shrink:0;}
 .a4-frame .recess-time{font-size:7px;font-weight:700;color:var(--ink);white-space:nowrap;flex-shrink:0;}
 .a4-frame .recess-line{flex:1;border:none;border-top:1px dashed #bbb;}
@@ -125,7 +130,7 @@ textarea:focus{border-color:var(--tue);}
 .a4-frame .lesson .ldesc.continued{color:#aaa;font-style:italic;}
 .a4-frame .file-pill{display:inline-block;font-size:7px;font-weight:800;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:20px;padding:1px 7px;margin-top:2px;letter-spacing:.02em;}
 .a4-frame .free-note{font-size:8.5px;font-weight:600;color:#555;line-height:1.45;padding:3px 4px 4px;border-radius:6px;background:#f5f5f5;margin-bottom:2px;flex-shrink:0;}
-.a4-frame .vikar-badge{display:inline-block;font-size:6.5px;font-weight:800;background:#FECA57;color:#1a1000;border-radius:4px;padding:0px 4px;margin-left:4px;vertical-align:middle;line-height:1.6;letter-spacing:.02em;}
+.a4-frame .vikar-badge{display:inline-block;font-size:6.5px;font-weight:800;background:#FECA57;color:#1a1000;border-radius:4px;padding:0px 4px;margin-left:4px;vertical-align:middle;line-height:1.6;letter-spacing:.02em;margin-top:-2px;}
 
 /* Activity-only day (0. grade style) */
 .a4-frame .activity-body{flex:1;overflow:hidden;padding:6px 7px;display:flex;flex-direction:column;gap:0;min-width:0;}
