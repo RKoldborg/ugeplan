@@ -1,4 +1,3 @@
- 
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -114,13 +113,19 @@ textarea:focus{border-color:var(--tue);}
 .a4-frame .wed .lesson{background:#E8FAFE;border-left:3px solid var(--wed);}
 .a4-frame .thu .lesson{background:#E8FBF5;border-left:3px solid var(--thu);}
 .a4-frame .fri .lesson{background:#F0EEFF;border-left:3px solid var(--fri);}
-.a4-frame .lesson .ltime{font-size:7.5px;font-weight:700;opacity:.4;display:block;letter-spacing:.02em;}
+.a4-frame .lesson .ltime{font-size:7.5px;font-weight:700;color:var(--ink);opacity:1;display:block;letter-spacing:.02em;}
 .a4-frame .lesson .lsubject{font-size:10px;font-weight:800;display:block;line-height:1.2;overflow-wrap:anywhere;}
+.a4-frame .double-badge{display:inline-block;font-size:6.5px;font-weight:900;background:var(--ink);color:white;border-radius:4px;padding:0px 3px;margin-left:4px;vertical-align:middle;line-height:1.6;letter-spacing:.03em;}
+.a4-frame .recess{display:flex;align-items:center;gap:5px;padding:3px 0;flex-shrink:0;}
+.a4-frame .recess-time{font-size:7px;font-weight:700;color:var(--ink);white-space:nowrap;flex-shrink:0;}
+.a4-frame .recess-line{flex:1;border:none;border-top:1px dashed #bbb;}
+.a4-frame .recess-label{font-size:7px;font-weight:700;color:#999;white-space:nowrap;flex-shrink:0;}
 .a4-frame .lesson .ldesc{font-size:8.5px;font-weight:600;margin-top:2px;line-height:1.4;display:block;color:#444;overflow-wrap:anywhere;}
 .a4-frame .lesson .ldesc.empty{color:#bbb;font-style:italic;}
+.a4-frame .lesson .ldesc.continued{color:#aaa;font-style:italic;}
 .a4-frame .file-pill{display:inline-block;font-size:7px;font-weight:800;background:#f0f0f0;color:#666;border:1px solid #ddd;border-radius:20px;padding:1px 7px;margin-top:2px;letter-spacing:.02em;}
 .a4-frame .free-note{font-size:8.5px;font-weight:600;color:#555;line-height:1.45;padding:3px 4px 4px;border-radius:6px;background:#f5f5f5;margin-bottom:2px;flex-shrink:0;}
-.a4-frame .vikar-badge{display:inline-block;font-size:7px;font-weight:800;background:#FECA57;color:#1a1000;border-radius:20px;padding:1px 6px;margin-top:2px;letter-spacing:.03em;}
+.a4-frame .vikar-badge{display:inline-block;font-size:6.5px;font-weight:800;background:#FECA57;color:#1a1000;border-radius:4px;padding:0px 4px;margin-left:4px;vertical-align:middle;line-height:1.6;letter-spacing:.02em;}
 
 /* Activity-only day (0. grade style) */
 .a4-frame .activity-body{flex:1;overflow:hidden;padding:6px 7px;display:flex;flex-direction:column;gap:0;min-width:0;}
@@ -334,14 +339,25 @@ function parseDayBlock(header, lines){
     }
   }
 
+  function timeToMins(t){
+    const m = t.trim().match(/(\d{1,2}):(\d{2})/);
+    return m ? parseInt(m[1])*60 + parseInt(m[2]) : 0;
+  }
+
+  // Merge only truly consecutive same-subject slots (gap ≤ 5 min)
   const slots = [];
   for(const s of rawSlots){
     const prev = slots[slots.length-1];
     if(prev && prev.name === s.name){
-      prev.time = prev.time.split('–')[0].trim() + ' – ' + s.time.split('–')[1].trim();
-    } else {
-      slots.push({...s});
+      const prevEnd   = timeToMins(prev.time.split('–')[1]);
+      const thisStart = timeToMins(s.time.split('–')[0]);
+      if(thisStart - prevEnd <= 5){
+        prev.time = prev.time.split('–')[0].trim() + ' – ' + s.time.split('–')[1].trim();
+        prev.count = (prev.count || 1) + 1;
+        continue;
+      }
     }
+    slots.push({...s, count: 1});
   }
 
   const knownSubjectNames = new Set(slots.map(s => s.name.toLowerCase()));
@@ -379,8 +395,26 @@ function parseDayBlock(header, lines){
     sectionMap[k].push(sec);
   }
 
+  // ── Inject recess breaks between slots based on time gaps ──
+  const slotsWithBreaks = [];
+  for(let i = 0; i < slots.length; i++){
+    if(i > 0){
+      const prevEnd   = timeToMins(slots[i-1].time.split('–')[1]);
+      const thisStart = timeToMins(slots[i].time.split('–')[0]);
+      const gap = thisStart - prevEnd;
+      if(gap >= 20){
+        const breakStart = slots[i-1].time.split('–')[1].trim();
+        const breakEnd   = slots[i].time.split('–')[0].trim();
+        const label = gap >= 45 ? 'Store frikvarter' : 'Lille frikvarter';
+        slotsWithBreaks.push({ isBreak: true, time: `${breakStart} – ${breakEnd}`, label });
+      }
+    }
+    slotsWithBreaks.push(slots[i]);
+  }
+
   const consumedCount = {};
-  const lessons = slots.map(slot => {
+  const lessons = slotsWithBreaks.map(slot => {
+    if(slot.isBreak) return { isBreak: true, time: slot.time, label: slot.label };
     const slotNorm = norm(slot.name);
     let matched = null;
     for(const [k, secArr] of Object.entries(sectionMap)){
@@ -394,9 +428,21 @@ function parseDayBlock(header, lines){
       }
     }
     const desc = matched ? matched.text : '';
-    return { time: slot.time, subject: slot.name, desc,
+    return { time: slot.time, subject: slot.name, count: slot.count || 1, desc,
              vikar: hasVikar(desc) || hasVikar(matched ? matched.heading : '') };
   });
+
+  // Mark lessons with no description that follow an earlier occurrence of the same subject
+  const seenSubjects = new Set();
+  for(const l of lessons){
+    if(l.isBreak) continue;
+    const key = norm(l.subject);
+    if(l.desc && l.desc.trim().length > 0){
+      seenSubjects.add(key);
+    } else if(seenSubjects.has(key)){
+      l.continued = true;
+    }
+  }
 
   const allText = contentLines.join(' ');
   const isSpecial = /pædagogisk dag|skolefri|fritten fra kl/i.test(allText);
@@ -488,20 +534,30 @@ function renderPage(data, meta){
         ? `<div class="free-note">${esc(day.freeNote).replace(/\n/g,'<br>')}</div>` : '';
       const lessonsHTML = day.lessons.map(l=>{
         const lv = l.vikar;
+        if(l.isBreak){
+          return `<div class="recess">
+            <span class="recess-time">${esc(l.time)}</span>
+            <hr class="recess-line">
+            <span class="recess-label">${esc(l.label)}</span>
+          </div>`;
+        }
         if(l.isFree){
           return `<div class="lesson lesson-free">
             <span class="ltime">${esc(l.time)}</span>
             <span class="lsubject">🔔 Fri lektion</span>
           </div>`;
         }
+        const doubleBadge = l.count > 1 ? `<span class="double-badge">×${l.count}</span>` : '';
+        const vikarBadge  = lv ? `<span class="vikar-badge">👤 Vikar</span>` : '';
         const hasDesc = l.desc && l.desc.trim().length > 0;
         return `<div class="lesson">
           <span class="ltime">${esc(l.time)}</span>
-          <span class="lsubject">${esc(l.subject)}</span>
-          ${lv ? '<span class="vikar-badge">👤 Vikar</span>' : ''}
+          <span class="lsubject">${esc(l.subject)}${doubleBadge}${vikarBadge}</span>
           ${hasDesc
             ? `<span class="ldesc">${formatDesc(l.desc)}</span>`
-            : `<span class="ldesc empty">Ingen besked fra læreren</span>`}
+            : l.continued
+              ? `<span class="ldesc continued">↩ Fortsat fra tidligere</span>`
+              : `<span class="ldesc empty">Ingen besked fra læreren</span>`}
         </div>`;
       }).join('');
       bodyHTML=`<div class="day-body">${freeNoteHTML}${lessonsHTML}</div>`;
