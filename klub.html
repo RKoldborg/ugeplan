@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klub-ugeplan – Magasin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800;900&family=Andika:ital,wght@0,400;0,700;1,400&display=swap');
+:root {
+  --bg:#0f0f1a; --panel:#16162a; --card:#1e1e35; --border:#2a2a45;
+  --text:#e8e8f0; --muted:#6b6b8a; --accent:#e94560;
+  --mon:#FF6B6B; --tue:#FF9F43; --wed:#48DBFB; --thu:#1DD1A1; --fri:#A29BFE;
+  --evt:#2D2D2D;
+  --sched-bg:#FFF4E6;
+  --paper:#FFFAF0;
+  --ink:#1F1F2E;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Andika',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── Editor UI (same as before) ── */
+.top-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.top-bar-title{font-family:'Baloo 2',cursive;font-size:20px;flex:1;}
+.top-bar-title span{color:var(--tue);}
+.btn{background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 14px;font-family:'Andika',sans-serif;font-weight:800;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{color:var(--text);border-color:var(--text);}
+.btn.primary{background:var(--tue);border-color:var(--tue);color:#1a0800;}
+.btn.primary:hover{opacity:.88;}
+.btn.hidden{display:none;}
+.input-section{padding:20px 24px;display:flex;flex-direction:column;gap:12px;}
+.meta-row{display:flex;gap:10px;flex-wrap:wrap;}
+.meta-input{background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Andika',sans-serif;font-size:13px;padding:8px 12px;outline:none;transition:border-color .2s;width:160px;}
+.meta-input::placeholder{color:var(--muted);}
+.meta-input:focus{border-color:var(--tue);}
+textarea{background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Andika',sans-serif;font-size:12px;line-height:1.6;padding:14px 16px;resize:vertical;min-height:240px;outline:none;transition:border-color .2s;width:100%;}
+textarea::placeholder{color:var(--muted);}
+textarea:focus{border-color:var(--tue);}
+.hint{font-size:11px;color:var(--muted);font-weight:600;line-height:1.6;background:#ffffff06;border-radius:8px;padding:10px 14px;}
+.hint strong{color:var(--text);}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.status{font-size:11.5px;font-weight:700;color:var(--muted);min-height:18px;}
+.status.error{color:var(--accent);}
+.status.done{color:var(--thu);}
+.preview-section{flex:1;background:#2a2a3e;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px;overflow-y:auto;}
+.preview-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:60px 40px;}
+.preview-placeholder .big-emoji{font-size:56px;}
+.preview-placeholder h2{font-family:'Baloo 2',cursive;font-size:20px;color:#4a4a6a;}
+.preview-placeholder p{font-size:13px;font-weight:600;max-width:280px;line-height:1.6;}
+
+/* ──────────────────────────────────────────────────────────
+   MAGAZINE LAYOUT
+   - Vertical hero rail on left (week, dates, hilsen)
+   - Massive day grid filling the rest
+   - Events occupies a 2-row final column
+   - No wasted whitespace
+   ────────────────────────────────────────────────────────── */
+.a4-scale-wrapper{display:block;transform-origin:top left;}
+.a4-frame{background:white;width:297mm;height:210mm;box-shadow:0 8px 40px rgba(0,0,0,.5);border-radius:3px;overflow:hidden;}
+.a4-frame .page{
+  width:297mm;height:210mm;
+  background:var(--paper);
+  font-family:'Andika',sans-serif;color:var(--ink);
+  display:grid;
+  grid-template-columns:58mm 1fr 70mm;
+  gap:0;
+  position:relative;
+  overflow:hidden;
+}
+
+/* ── HERO RAIL — printer-friendly cream sidebar ── */
+.a4-frame .rail{
+  background:#FFF6E5;
+  color:var(--ink);
+  padding:6mm 5mm 5mm;
+  display:flex;flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  border-right:3px solid var(--ink);
+}
+/* Decorative corner accents (line-drawn, not color-filled) */
+.a4-frame .rail::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4mm;
+  background:repeating-linear-gradient(90deg,
+    var(--mon) 0 8mm, var(--tue) 8mm 16mm, var(--wed) 16mm 24mm,
+    var(--thu) 24mm 32mm, var(--fri) 32mm 40mm, var(--accent) 40mm 48mm);
+}
+.a4-frame .rail-eyebrow{
+  font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:#999;margin-top:3mm;
+}
+.a4-frame .rail-week{
+  font-family:'Baloo 2',cursive;font-weight:900;
+  font-size:84px;line-height:.85;margin-top:1mm;
+  color:var(--accent);letter-spacing:-.04em;
+}
+.a4-frame .rail-week-label{
+  font-family:'Baloo 2',cursive;font-size:16px;
+  color:#777;margin-top:0;
+}
+.a4-frame .rail-dates{
+  font-size:13px;font-weight:800;margin-top:4mm;
+  padding:2.5mm 0;
+  border-top:2px solid var(--ink);
+  border-bottom:2px solid var(--ink);
+  letter-spacing:.01em;
+  color:var(--ink);
+}
+.a4-frame .rail-club{
+  font-family:'Baloo 2',cursive;font-size:15px;margin-top:3mm;line-height:1.15;
+  color:var(--ink);
+}
+.a4-frame .rail-hilsen{
+  margin-top:4mm;flex:1;min-height:0;display:flex;flex-direction:column;
+}
+.a4-frame .rail-hilsen-label{
+  font-family:'Baloo 2',cursive;font-size:11px;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:2mm;display:flex;align-items:center;gap:1.5mm;
+}
+.a4-frame .rail-hilsen-body{
+  font-size:9.5px;line-height:1.55;font-weight:400;
+  color:#3a3a4a;flex:1;overflow:hidden;
+  text-align:justify;hyphens:auto;
+}
+.a4-frame .rail-sig{
+  font-style:italic;font-size:9px;color:#888;margin-top:3mm;
+  padding-top:2.5mm;border-top:1.5px dashed #d4c5a0;
+  line-height:1.4;
+}
+
+/* ── MAIN AREA — newspaper-style column flow, flanked by both sidebars ── */
+.a4-frame .main{
+  padding:5mm 5mm 5mm 5mm;
+  min-height:0;
+  overflow:hidden;
+}
+/* Days area: vertical newspaper columns. Cards stack top-to-bottom,
+   spilling into the next column when full. Column width is fixed so
+   the number of columns adapts to how much content there is. */
+.a4-frame .days-flow{
+  height:100%;
+  min-width:0;
+  column-width:48mm;
+  column-gap:4mm;
+  column-fill:auto;
+}
+
+/* Day cards – atomic units that don't split across columns */
+.a4-frame .day-card{
+  background:white;
+  border:1.5px solid var(--day, #ccc);
+  border-radius:4mm 4mm 1.5mm 1.5mm;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 2px 5px rgba(0,0,0,.06);
+  position:relative;
+  break-inside:avoid;
+  -webkit-column-break-inside:avoid;
+  page-break-inside:avoid;
+  margin-bottom:3mm;
+  width:100%;
+}
+.a4-frame .day-card.mon{--day:var(--mon);}
+.a4-frame .day-card.tue{--day:var(--tue);}
+.a4-frame .day-card.wed{--day:var(--wed);}
+.a4-frame .day-card.thu{--day:var(--thu);}
+.a4-frame .day-card.fri{--day:var(--fri);}
+.a4-frame .day-card .day-hdr{
+  padding:3mm 3mm 2.5mm;
+  color:white;
+  font-family:'Baloo 2',cursive;
+  display:flex;align-items:baseline;justify-content:space-between;gap:2mm;
+  flex-shrink:0;
+  position:relative;
+  background:var(--day);
+}
+.a4-frame .day-card .day-hdr::after{
+  content:'';position:absolute;left:3mm;right:3mm;bottom:0;
+  height:1px;background:rgba(255,255,255,.25);
+}
+.a4-frame .day-card .day-name{font-size:16px;line-height:1;}
+.a4-frame .day-card .day-date{font-family:'Andika',sans-serif;font-size:9px;font-weight:700;opacity:.85;}
+/* Yellow and cyan headers need dark text for legibility */
+.a4-frame .tue .day-hdr{color:var(--ink);}
+.a4-frame .tue .day-hdr .day-date{opacity:.55;}
+.a4-frame .wed .day-hdr{color:var(--ink);}
+.a4-frame .wed .day-hdr .day-date{opacity:.55;}
+
+/* Day body – activities */
+.a4-frame .day-body{
+  padding:2.5mm 2.5mm 2.5mm;
+  display:flex;flex-direction:column;gap:1.5mm;
+}
+.a4-frame .act{
+  padding:1.5mm 2mm 2mm;
+  border-radius:2mm;
+  flex-shrink:0;
+  position:relative;
+  line-height:1.25;
+}
+.a4-frame .mon .act{background:#FFEEEE;}
+.a4-frame .tue .act{background:#FFF1DD;}
+.a4-frame .wed .act{background:#E5F8FE;}
+.a4-frame .thu .act{background:#E2FAF0;}
+.a4-frame .fri .act{background:#EFEDFF;}
+.a4-frame .act-cat{
+  display:flex;align-items:center;gap:1.2mm;
+  font-size:8px;font-weight:800;color:#666;
+  text-transform:uppercase;letter-spacing:.05em;
+}
+.a4-frame .act-icon{font-size:11px;line-height:1;}
+.a4-frame .act-text{
+  font-size:11.5px;font-weight:700;margin-top:.7mm;
+  color:var(--ink);overflow-wrap:anywhere;display:block;line-height:1.3;
+}
+/* (Note: previously the Fælles category had inverted dark styling — removed
+   so all activity categories share the same neutral pastel treatment.) */
+
+/* Closed-day card */
+.a4-frame .day-card.closed{background:transparent;border:2px dashed #d0d0d0;box-shadow:none;}
+.a4-frame .day-card.closed .day-hdr{background:#d0d0d0;color:#666;}
+.a4-frame .day-card.closed .day-hdr::after{display:none;}
+.a4-frame .day-card.closed .closed-body{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2mm;padding:5mm 4mm 6mm;color:#888;text-align:center;
+}
+.a4-frame .day-card.closed .closed-icon{font-size:32px;line-height:1;opacity:.45;}
+.a4-frame .day-card.closed .closed-label{font-family:'Baloo 2',cursive;font-size:16px;color:#888;letter-spacing:.1em;}
+.a4-frame .day-card.closed .closed-note{font-size:9px;font-weight:600;line-height:1.4;color:#aaa;}
+
+/* ── EVENTS SIDEBAR — mirrors the hero rail visually ── */
+.a4-frame .events-rail{
+  background:#FFF6E5;
+  color:var(--ink);
+  padding:6mm 5mm 5mm;
+  display:flex;flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  border-left:3px solid var(--ink);
+}
+/* Mirrored decorative top stripe — same rainbow but reversed */
+.a4-frame .events-rail::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4mm;
+  background:repeating-linear-gradient(90deg,
+    var(--accent) 0 8mm, var(--fri) 8mm 16mm, var(--thu) 16mm 24mm,
+    var(--wed) 24mm 32mm, var(--tue) 32mm 40mm, var(--mon) 40mm 48mm);
+}
+.a4-frame .events-eyebrow{
+  font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:#999;margin-top:3mm;
+}
+.a4-frame .events-title{
+  font-family:'Baloo 2',cursive;font-weight:900;
+  font-size:28px;line-height:.95;margin-top:1mm;
+  color:var(--accent);letter-spacing:-.01em;
+}
+.a4-frame .events-sub{
+  font-family:'Baloo 2',cursive;font-size:13px;
+  color:#777;margin-top:0;
+}
+.a4-frame .events-divider{
+  margin-top:4mm;
+  border-top:2px solid var(--ink);
+}
+
+/* Events list */
+.a4-frame .events-body{
+  flex:1;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;gap:3mm;
+  padding-top:3mm;
+}
+.a4-frame .evt-section{display:flex;flex-direction:column;gap:1.5mm;}
+.a4-frame .evt-section + .evt-section{
+  padding-top:3mm;
+  border-top:1.5px dashed #d4c5a0;
+}
+.a4-frame .evt-label{
+  font-family:'Baloo 2',cursive;font-size:11px;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.06em;line-height:1.1;
+}
+.a4-frame .evt-item{
+  background:#fff;
+  border-left:3px solid var(--accent);
+  border-radius:0 2mm 2mm 0;
+  padding:2mm 2.5mm 2.2mm;
+  line-height:1.3;
+  overflow-wrap:anywhere;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.a4-frame .evt-item + .evt-item{margin-top:1.5mm;}
+.a4-frame .evt-title{
+  font-size:10.5px;font-weight:800;color:var(--ink);line-height:1.25;
+}
+.a4-frame .evt-fields{
+  display:flex;flex-direction:column;gap:.4mm;margin-top:1.2mm;
+}
+.a4-frame .evt-field{
+  font-size:9px;font-weight:600;color:#555;
+  display:flex;align-items:baseline;gap:1.5mm;line-height:1.3;
+}
+.a4-frame .evt-fi{font-size:10px;line-height:1;flex-shrink:0;}
+.a4-frame .events-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#bbb;font-weight:700;gap:2mm;
+}
+
+/* Watermark emoji in the corner of the main area for personality */
+.a4-frame .main-emoji{
+  position:absolute;top:3mm;right:6mm;
+  font-size:18px;opacity:.4;
+  pointer-events:none;
+}
+
+@media print{
+  body{background:white;}
+  .top-bar,.input-section{display:none !important;}
+  .preview-section{padding:0;background:white;display:block;}
+  .a4-scale-wrapper{transform:none !important;margin:0 !important;}
+  .a4-frame{box-shadow:none;width:297mm;height:210mm;}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+  @page{size:A4 landscape;margin:0;}
+
+  /* ── Ink-saving overrides ── */
+  /* Paper page and both sidebars: drop cream fill, go white */
+  .a4-frame .page{background:white !important;}
+  .a4-frame .rail{background:white !important;}
+  .a4-frame .events-rail{background:white !important;}
+  /* Event item subtle background → pure white */
+  .a4-frame .evt-item{background:white !important;box-shadow:none !important;}
+  /* Day card shadows are subtle ink — remove for cleaner print */
+  .a4-frame .day-card{box-shadow:none !important;}
+  /* The dashed border on the sig divider is light tan — keep it readable on white */
+  .a4-frame .rail-sig{border-top-color:#bbb !important;}
+  .a4-frame .evt-section + .evt-section{border-top-color:#bbb !important;}
+}
+@media(max-width:700px){
+  .input-section{padding:14px 12px;}
+  .preview-section{padding:8px 4px;overflow:visible;align-items:flex-start;justify-content:flex-start;}
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-title">🎨 Klub-ugeplan <span>Magasin-layout</span></div>
+  <button class="btn" onclick="clearAll()">✕ Ryd</button>
+  <button class="btn primary hidden" id="printBtn" onclick="window.print()">🖨️ Udskriv / PDF</button>
+</div>
+
+<div class="input-section">
+  <div class="meta-row">
+    <input class="meta-input" id="metaClub" placeholder="Klub-navn (valgfrit)" />
+    <input class="meta-input" id="metaWeek" placeholder="Uge (fx 20)" type="number" />
+    <input class="meta-input" id="metaDateRange" placeholder="fx 12.–16. maj" style="width:200px"/>
+  </div>
+  <textarea id="rawInput" placeholder="Indsæt hele klubbens nyhedsbrev her 📋"></textarea>
+  <div class="actions">
+    <button class="btn primary" onclick="buildPlan()">📐 Strukturér klub-ugeplan</button>
+    <span class="status" id="status"></span>
+  </div>
+  <div class="hint">
+    <strong>Magasin-layout:</strong> Vertikal hero-rail i venstre side med uge-nr og hilsen, store dage-kort til højre, og Ture &amp; events i en høj kolonne længst ude. <strong>Genvej:</strong> Ctrl/Cmd + Enter.
+  </div>
+</div>
+
+<div class="preview-section" id="previewSection">
+  <div class="preview-placeholder">
+    <div class="big-emoji">🎨</div>
+    <h2>Klar til klub-ugeplan</h2>
+    <p>Indsæt nyhedsbrevet og tryk "Strukturér klub-ugeplan".</p>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const EMOJIS = ['🎨','🎲','🏓','⚽','🎭','🧩','🎪','🌈','🦄','🎮','🎸','🍿','🏀','🎯','🎊','🛼','🦊','🐝','🌟','✨'];
+function randomEmoji(){ return EMOJIS[Math.floor(Math.random()*EMOJIS.length)]; }
+
+function esc(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Day detection ────────────────────────────────────────
+const DAY_HDR_RE = /^(Mandag|Tirsdag|Onsdag|Torsdag|Fredag)\s*:?\s*(.*)$/i;
+function isDayHeader(line){ return DAY_HDR_RE.test(line.trim()); }
+function parseDayHeader(line){
+  const m = line.trim().match(DAY_HDR_RE);
+  if(!m) return {name:line.trim(), rest:''};
+  return {name: cap(m[1]), rest: (m[2]||'').trim()};
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase(); }
+function dayKey(name){
+  const l = name.toLowerCase();
+  if(l.startsWith('man')) return 'mon';
+  if(l.startsWith('tir')) return 'tue';
+  if(l.startsWith('ons')) return 'wed';
+  if(l.startsWith('tor')) return 'thu';
+  if(l.startsWith('fre')) return 'fri';
+  return null;
+}
+
+// ── Categories ─────────────────────────────────────────
+const CAT_DEFS = [
+  {key:'værksted',  label:'Værksted',   icon:'🔧', aliases:['værksted','vaerksted']},
+  {key:'sal',       label:'Sal',        icon:'🤸', aliases:['sal']},
+  {key:'cafe',      label:'Cafe Snask', icon:'🍴', aliases:['cafe snask','café snask','cafesnask','café','cafe']},
+  {key:'fælles',    label:'Fælles',     icon:'🎉', aliases:['fælles','faelles']},
+  {key:'andet',     label:'Andet',      icon:'✨', aliases:['andet','aftenklub','tur']},
+];
+function matchCategory(line){
+  const m = line.match(/^([^:]+):\s*(.*)$/);
+  if(!m) return null;
+  const head = m[1].toLowerCase().trim();
+  for(const cat of CAT_DEFS){
+    for(const alias of cat.aliases){
+      if(head === alias || head.startsWith(alias)) return {cat, value:m[2].trim()};
+    }
+  }
+  return null;
+}
+
+function isClosedLine(line){
+  return /\b(lukket|luket|fri\b|lukker)\b/i.test(line);
+}
+
+// ── Aula cleanup ─────────────────────────────────────────
+function stripAulaCruft(lines){
+  const dropPatterns = [
+    /^\s*(for\s+)?\d+\s+(sekund|minut|time|dag|døgn|uge|måned|maaned|år)\w{0,3}\s+siden\s*$/i,
+    /^\s*i\s+går\s*$/i,
+    /^\s*lige\s+nu\s*$/i,
+    /^sendt\s+til\s*:/i,
+    /^\s*\d+\s+synes\s+godt\s+om/i,
+    /^\s*\d+\s+kommentar\w*\s*$/i,
+    /\bsynes\s+godt\s+om\b.*\bkommentar/i,
+    /^skriv\s+en\s+kommentar/i,
+    /^din\s+kommentar\s+kan\s+ses/i,
+    /^\s*\d{1,3}\s*$/,
+  ];
+  let cleaned = lines.filter(l => {
+    if(!l) return true;
+    return !dropPatterns.some(re => re.test(l));
+  });
+  const isLikelyAuthorName = (l) => {
+    if(!l || l.length > 40) return false;
+    if(/[:0-9]/.test(l)) return false;
+    const words = l.split(/\s+/);
+    if(words.length < 1 || words.length > 3) return false;
+    return words.every(w => /^[A-ZÆØÅ][a-zæøåA-ZÆØÅ\-]*$/.test(w));
+  };
+  const isContentStart = (l) =>
+    /^(nyhedsbrev|kære|hej\s|tak\s|i\s+denne|ugeplan)/i.test(l);
+  let dropUntil = -1;
+  for(let i = 0; i < cleaned.length; i++){
+    const l = cleaned[i];
+    if(!l) continue;
+    if(isContentStart(l)) break;
+    if(isLikelyAuthorName(l)){ dropUntil = i; }
+    else break;
+  }
+  if(dropUntil >= 0) cleaned = cleaned.slice(dropUntil + 1);
+  return cleaned;
+}
+
+// ── Main parser ──────────────────────────────────────────
+function parseKlub(raw){
+  let lines = raw.split('\n').map(l => l.replace(/\u00A0/g,' ').trim());
+  lines = stripAulaCruft(lines);
+
+  const ugeplanIdx = lines.findIndex(l => /^ugeplan\s*:?\s*$/i.test(l));
+  const firstDayIdx = lines.findIndex(l => isDayHeader(l));
+  const planStart = ugeplanIdx >= 0 ? ugeplanIdx + 1 : (firstDayIdx >= 0 ? firstDayIdx : 0);
+
+  const eventHeadings = [
+    /ture\s*\/?\s*aftenklubber/i,
+    /klubbens?\s+(maj|juni|juli|august|september|oktober|november|december|januar|februar|marts|april)/i,
+    /klubben\s+indtil/i,
+    /aftenklubber?\s+denne\s+uge/i,
+  ];
+  let eventsStart = -1;
+  for(let i = planStart; i < lines.length; i++){
+    if(eventHeadings.some(re => re.test(lines[i]))){ eventsStart = i; break; }
+  }
+
+  const introLines = lines.slice(0, ugeplanIdx >= 0 ? ugeplanIdx : (firstDayIdx >= 0 ? firstDayIdx : lines.length));
+  const dayLines   = lines.slice(planStart, eventsStart >= 0 ? eventsStart : lines.length);
+  const eventLines = eventsStart >= 0 ? lines.slice(eventsStart) : [];
+
+  return {
+    intro: parseIntro(introLines),
+    days: parseDays(dayLines),
+    events: parseEvents(eventLines),
+  };
+}
+
+function parseIntro(lines){
+  lines = lines.filter(l => l.length > 0);
+  if(!lines.length) return {text:'', signature:''};
+  lines = lines.filter(l => !/^nyhedsbrev\s+uge/i.test(l));
+  let sigIdx = -1;
+  for(let i = lines.length-1; i >= 0; i--){
+    if(/kæmpe kram|kærlige hilsner|hilsner fra|mange knus|med venlig|hilsen|knus fra/i.test(lines[i])){
+      sigIdx = i; break;
+    }
+  }
+  const bodyLines = lines.slice(0, sigIdx >= 0 ? sigIdx : lines.length)
+    .filter(l => !/^uge\s+\d{1,2}\s*$/i.test(l));
+  const sig = sigIdx >= 0 ? lines[sigIdx] : '';
+  return { text: bodyLines.join('\n').trim(), signature: sig };
+}
+
+function parseDays(lines){
+  const blocks = [];
+  for(const line of lines){
+    if(!line) continue;
+    if(isDayHeader(line)){
+      blocks.push({header: parseDayHeader(line), body:[]});
+    } else if(blocks.length > 0){
+      blocks[blocks.length-1].body.push(line);
+    }
+  }
+  const days = {};
+  for(const b of blocks){
+    const key = dayKey(b.header.name);
+    if(!key) continue;
+    days[key] = parseDayBody(b.header, b.body);
+  }
+  return days;
+}
+
+function parseDayBody(header, lines){
+  if(isClosedLine(header.rest) || (lines.length <= 2 && lines.some(isClosedLine))){
+    return {
+      name: header.name, date: '', closed: true,
+      closedNote: lines.join(' ').trim() || header.rest || '',
+      activities: [],
+    };
+  }
+  const activities = [];
+  let current = null;
+  const extras = [];
+  for(const line of lines){
+    const cat = matchCategory(line);
+    if(cat){
+      if(current) activities.push(current);
+      current = {category: cat.cat, value: cat.value};
+    } else if(current){
+      current.value = (current.value + ' ' + line).trim();
+    } else {
+      extras.push(line);
+    }
+  }
+  if(current) activities.push(current);
+  return {
+    name: header.name, date: header.rest || '', closed: false,
+    activities, extras: extras.join('\n').trim(),
+  };
+}
+
+function parseEvents(lines){
+  if(!lines.length) return {sections: []};
+  const sections = [];
+  let current = null;
+  const isHeading = (l) =>
+    /ture\s*\/?\s*aftenklubber/i.test(l) ||
+    /klubbens?\s+(maj|juni|juli|august|september|oktober|november|december|januar|februar|marts|april)/i.test(l) ||
+    /klubben\s+indtil/i.test(l) ||
+    /aftenklubber?\s+denne\s+uge/i.test(l);
+
+  for(const line of lines){
+    if(!line) continue;
+    if(isHeading(line)){
+      if(current) sections.push(current);
+      current = {title: line.replace(/:$/,'').trim(), items: []};
+    } else if(current){
+      current.items.push(line);
+    }
+  }
+  if(current) sections.push(current);
+
+  for(const sec of sections){
+    const grouped = [];
+    let cur = null;
+    const isItemStart = (l) =>
+      /^(d\.|den\b)/i.test(l) ||
+      /^\d{1,2}\.?\s/.test(l) ||
+      /^(mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag)\b/i.test(l);
+    const timeRegex = /\b(\d{1,2}[:.]\d{2}\s*[-–]\s*\d{1,2}[:.]\d{2})\b/;
+    const extractInlineTime = (text) => {
+      const m = text.match(timeRegex);
+      if(!m) return {text, time: null};
+      const time = m[1].replace('.', ':');
+      const clean = text.replace(m[0], '').replace(/\s+/g, ' ').replace(/\s*[•·,]\s*$/,'').trim();
+      return {text: clean, time};
+    };
+    const flush = () => { if(cur) grouped.push(cur); cur = null; };
+    for(const raw of sec.items){
+      const line = raw.trim();
+      if(!line) continue;
+      const fieldMatch = line.match(/^(pris|aktivitet|tid|tidspunkt|tilmelding|sted)\s*:\s*(.*)$/i);
+      if(fieldMatch && cur){
+        const fn = fieldMatch[1].toLowerCase(), fv = fieldMatch[2].trim();
+        if(fn === 'pris') cur.price = fv;
+        else if(fn === 'aktivitet') cur.activity = fv;
+        else if(fn === 'tid' || fn === 'tidspunkt') cur.time = fv;
+        else if(fn === 'tilmelding') cur.signup = fv;
+        else if(fn === 'sted') cur.place = fv;
+        continue;
+      }
+      if(/^\d{1,2}[:.]\d{2}\s*[-–]\s*\d{1,2}[:.]\d{2}\s*$/.test(line) && cur){
+        cur.time = line.replace('.', ':');
+        continue;
+      }
+      if(isItemStart(line) || !cur){
+        flush();
+        const {text, time} = extractInlineTime(line);
+        cur = {title: text};
+        if(time) cur.time = time;
+        continue;
+      }
+      const {text, time} = extractInlineTime(line);
+      if(time && !cur.time) cur.time = time;
+      cur.title = (cur.title + ' ' + text).trim();
+    }
+    flush();
+    sec.items = grouped;
+  }
+  return {sections};
+}
+
+// ── RENDER ───────────────────────────────────────────────
+const DAY_ORDER = ['mon','tue','wed','thu','fri'];
+const DAY_LABEL = {mon:'Mandag',tue:'Tirsdag',wed:'Onsdag',thu:'Torsdag',fri:'Fredag'};
+
+function renderDay(key, day){
+  const name = day ? day.name : DAY_LABEL[key];
+  const date = day ? day.date : '';
+  if(!day){
+    return `<div class="day-card ${key} closed">
+      <div class="day-hdr"><span class="day-name">${esc(name)}</span></div>
+      <div class="closed-body"><div class="closed-icon">📭</div><div class="closed-label">Ingen info</div></div>
+    </div>`;
+  }
+  if(day.closed){
+    return `<div class="day-card ${key} closed">
+      <div class="day-hdr"><span class="day-name">${esc(name)}</span></div>
+      <div class="closed-body">
+        <div class="closed-icon">🔒</div>
+        <div class="closed-label">LUKKET</div>
+        ${day.closedNote ? `<div class="closed-note">${esc(day.closedNote)}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  const acts = day.activities.map(a => {
+    return `<div class="act">
+      <div class="act-cat"><span class="act-icon">${a.category.icon}</span>${esc(a.category.label)}</div>
+      <span class="act-text">${esc(a.value)}</span>
+    </div>`;
+  }).join('');
+  const extra = day.extras
+    ? `<div class="act"><span class="act-text">${esc(day.extras).replace(/\n/g,'<br>')}</span></div>` : '';
+  return `<div class="day-card ${key}">
+    <div class="day-hdr">
+      <span class="day-name">${esc(name)}</span>
+      ${date ? `<span class="day-date">${esc(date)}</span>` : ''}
+    </div>
+    <div class="day-body">${acts}${extra}</div>
+  </div>`;
+}
+
+function renderEvents(events){
+  if(!events.sections.length){
+    return `<aside class="events-rail">
+      <div class="events-eyebrow">Denne uge</div>
+      <div class="events-title">Ture &amp;<br>events</div>
+      <div class="events-divider"></div>
+      <div class="events-empty">
+        <div style="font-size:32px;opacity:.4;">📭</div>
+        <div>Intet planlagt</div>
+      </div>
+    </aside>`;
+  }
+  const renderItem = (it) => {
+    const f = [];
+    if(it.time)     f.push(`<span class="evt-field"><span class="evt-fi">🕒</span>${esc(it.time)}</span>`);
+    if(it.activity) f.push(`<span class="evt-field"><span class="evt-fi">🎯</span>${esc(it.activity)}</span>`);
+    if(it.place)    f.push(`<span class="evt-field"><span class="evt-fi">📍</span>${esc(it.place)}</span>`);
+    if(it.price)    f.push(`<span class="evt-field"><span class="evt-fi">💰</span>${esc(it.price)}</span>`);
+    if(it.signup)   f.push(`<span class="evt-field"><span class="evt-fi">✍️</span>${esc(it.signup)}</span>`);
+    return `<div class="evt-item">
+      <div class="evt-title">${esc(it.title)}</div>
+      ${f.length ? `<div class="evt-fields">${f.join('')}</div>` : ''}
+    </div>`;
+  };
+  const inner = events.sections.map(sec => {
+    return `<div class="evt-section">
+      <div class="evt-label">${esc(sec.title)}</div>
+      ${sec.items.map(renderItem).join('')}
+    </div>`;
+  }).join('');
+  return `<aside class="events-rail">
+    <div class="events-eyebrow">Denne uge 📌</div>
+    <div class="events-title">Ture &amp;<br>events</div>
+    <div class="events-divider"></div>
+    <div class="events-body">${inner}</div>
+  </aside>`;
+}
+
+function renderPage(data, meta){
+  const intro = data.intro;
+  const hilsenHTML = intro.text
+    ? `<div class="rail-hilsen-body">${esc(intro.text).replace(/\n/g,'<br>')}</div>`
+    : `<div class="rail-hilsen-body" style="opacity:.4;font-style:italic;">Ingen hilsen</div>`;
+  const sigHTML = intro.signature
+    ? `<div class="rail-sig">${esc(intro.signature)}</div>` : '';
+  const club = meta.club ? esc(meta.club) : 'Klubben';
+  const week = meta.week || '–';
+  const dates = meta.dateRange ? esc(meta.dateRange) : '';
+
+  return `<div class="page">
+    <aside class="rail">
+      <div class="rail-eyebrow">Ugeplan ${meta.emoji}</div>
+      <div class="rail-week">${esc(week)}</div>
+      <div class="rail-week-label">Uge</div>
+      ${dates ? `<div class="rail-dates">${dates}</div>` : ''}
+      <div class="rail-club">${club}</div>
+      <div class="rail-hilsen">
+        <div class="rail-hilsen-label">📣 Hilsen</div>
+        ${hilsenHTML}
+        ${sigHTML}
+      </div>
+    </aside>
+    <main class="main">
+      <div class="days-flow">
+        ${DAY_ORDER.map(key => renderDay(key, data.days[key])).join('')}
+      </div>
+    </main>
+    ${renderEvents(data.events)}
+  </div>`;
+}
+
+// ── ENTRY ────────────────────────────────────────────────
+function buildPlan(){
+  const raw = document.getElementById('rawInput').value.trim();
+  if(!raw){ setStatus('Indsæt klubbens nyhedsbrev først 😊','error'); return; }
+
+  let club = document.getElementById('metaClub').value.trim();
+  let week = document.getElementById('metaWeek').value.trim();
+  let dateRange = document.getElementById('metaDateRange').value.trim();
+  if(!week){ const m = raw.match(/uge\s+(\d{1,2})/i); if(m) week = m[1]; }
+
+  try{
+    const data = parseKlub(raw);
+    if(Object.keys(data.days).length === 0){
+      setStatus('Kunne ikke finde dagssektioner – tjek at teksten indeholder "Mandag", "Tirsdag" osv.','error');
+      return;
+    }
+    const frame = document.createElement('div');
+    frame.className = 'a4-frame';
+    frame.innerHTML = renderPage(data, {club, week, dateRange, emoji: randomEmoji()});
+    const wrapper = document.createElement('div');
+    wrapper.className = 'a4-scale-wrapper';
+    wrapper.appendChild(frame);
+    const section = document.getElementById('previewSection');
+    section.innerHTML = '';
+    section.appendChild(wrapper);
+
+    requestAnimationFrame(() => {
+      // ── Adaptive scaling for day cards (newspaper column flow) ──
+      // With column-fill:auto, content overflows horizontally (extra columns
+      // beyond the container width) if it doesn't fit vertically.
+      // Shrink fonts until everything fits within the available columns.
+      const daysFlow = frame.querySelector('.days-flow');
+      const BASE_CAT = 8, BASE_TEXT = 11.5;
+      const MIN_CAT = 6.5, MIN_TEXT = 8.5;
+      const STEP = 0.5;
+      function applyDays(catSz, textSz){
+        frame.querySelectorAll('.act-cat').forEach(el => el.style.fontSize = catSz + 'px');
+        frame.querySelectorAll('.act-text').forEach(el => el.style.fontSize = textSz + 'px');
+      }
+      function daysFit(){
+        if(!daysFlow) return true;
+        // Allow 1px tolerance for sub-pixel rounding
+        return daysFlow.scrollWidth <= daysFlow.clientWidth + 1;
+      }
+      let cs = BASE_CAT, ts = BASE_TEXT;
+      applyDays(cs, ts);
+      for(let i = 0; i < 20; i++){
+        if(daysFit()) break;
+        cs = Math.max(MIN_CAT, cs - STEP * 0.5);
+        ts = Math.max(MIN_TEXT, ts - STEP);
+        applyDays(cs, ts);
+      }
+
+      // ── Scale events card ──
+      const evtBody = frame.querySelector('.events-body');
+      if(evtBody){
+        const titles = evtBody.querySelectorAll('.evt-title');
+        const fields = evtBody.querySelectorAll('.evt-field');
+        const icons  = evtBody.querySelectorAll('.evt-fi');
+        const labels = evtBody.querySelectorAll('.evt-label');
+        let titleSz = 10, fieldSz = 8.5, iconSz = 9.5, labelSz = 10;
+        const apply = () => {
+          titles.forEach(el => el.style.fontSize = titleSz + 'px');
+          fields.forEach(el => el.style.fontSize = fieldSz + 'px');
+          icons.forEach(el  => el.style.fontSize = iconSz + 'px');
+          labels.forEach(el => el.style.fontSize = labelSz + 'px');
+        };
+        apply();
+        for(let i = 0; i < 14 && evtBody.scrollHeight > evtBody.clientHeight + 2 && titleSz > 7; i++){
+          titleSz -= 0.5;
+          fieldSz = Math.max(7, fieldSz - 0.5);
+          iconSz  = Math.max(8, iconSz - 0.4);
+          labelSz = Math.max(8, labelSz - 0.3);
+          apply();
+        }
+      }
+
+      // ── Scale hilsen on the rail ──
+      const hilsen = frame.querySelector('.rail-hilsen');
+      const hilsenBody = frame.querySelector('.rail-hilsen-body');
+      if(hilsen && hilsenBody){
+        let sz = 9;
+        hilsenBody.style.fontSize = sz + 'px';
+        for(let i = 0; i < 10 && hilsenBody.scrollHeight > hilsenBody.clientHeight + 2 && sz > 7; i++){
+          sz -= 0.5;
+          hilsenBody.style.fontSize = sz + 'px';
+        }
+      }
+
+      // ── Scale wrapper to fit screen ──
+      const W = frame.offsetWidth, H = frame.offsetHeight;
+      const avail = section.clientWidth - 16;
+      const scale = Math.min(1, avail / W);
+      wrapper.style.transform = 'scale(' + scale + ')';
+      wrapper.style.transformOrigin = 'top left';
+      wrapper.style.width  = W + 'px';
+      wrapper.style.height = H + 'px';
+      wrapper.style.marginRight  = (W * scale - W) + 'px';
+      wrapper.style.marginBottom = (H * scale - H) + 'px';
+    });
+
+    document.getElementById('printBtn').classList.remove('hidden');
+    setStatus('✅ Klub-ugeplan struktureret!','done');
+  } catch(err){
+    console.error(err);
+    setStatus('Fejl ved parsing – prøv igen.','error');
+  }
+}
+
+function setStatus(msg, type){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + (type || '');
+}
+
+function clearAll(){
+  ['metaClub','metaWeek','metaDateRange'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('rawInput').value = '';
+  document.getElementById('previewSection').innerHTML = `
+    <div class="preview-placeholder">
+      <div class="big-emoji">🎨</div>
+      <h2>Klar til klub-ugeplan</h2>
+      <p>Indsæt nyhedsbrevet og tryk "Strukturér klub-ugeplan".</p>
+    </div>`;
+  document.getElementById('printBtn').classList.add('hidden');
+  setStatus('');
+}
+
+document.getElementById('rawInput').addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter') buildPlan();
+});
+</script>
+</body>
+</html>
