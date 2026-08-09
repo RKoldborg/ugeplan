@@ -519,7 +519,7 @@ function renderPage(data, meta){
     } else if(day.special){
       // Extract first emoji from content as icon, and first meaningful line as label
       const specialLines = day.special.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-      const emojiMatch = day.special.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+      const emojiMatch = day.special.match(/\p{Regional_Indicator}{2}|\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*/u);
       const icon = emojiMatch ? emojiMatch[0] : '📅';
       // First line is usually the event title (e.g. "LEJRSKOLE ⛺")
       const label = specialLines[0] ? specialLines[0].replace(/[⛺🏕️🎪]/g,'').trim() : 'Særlig dag';
