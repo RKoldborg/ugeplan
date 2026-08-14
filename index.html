@@ -1,4 +1,4 @@
- 
+
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -223,7 +223,7 @@ function randomEmoji(){ return EMOJIS[Math.floor(Math.random()*EMOJIS.length)]; 
 
 function esc(s){
   if(!s) return '';
-  return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 const SUBJ_CODE = {
@@ -232,6 +232,7 @@ const SUBJ_CODE = {
   'N/T':'Natur/teknologi', NAT:'Natur/teknologi', GEO:'Geografi',
   BIO:'Biologi', FYS:'Fysik/kemi', SAM:'Samfundsfag',
   TYS:'Tysk', FRA:'Fransk', TRIV:'Trivsel', FRI:'Fri', SFO:'SFO',
+  HDS:'Håndværk og design',
 };
 
 const SUBJECT_COLORS = {
@@ -261,12 +262,19 @@ const SKIP_CODES = new Set(['BHK','ST','STØ']);
 const FREE_CODES = new Set(['FRI']);
 
 function resolveCodeLine(line){
-  const m = line.trim().match(/^[0-9A-ZÆØÅ]{2,4}\s+([A-ZÆØÅ\/]{2,5})\b/i);
+  const m = line.trim().match(/^[0-9A-ZÆØÅ.]{2,6}\s+([A-ZÆØÅ\/]{2,5})\b/i);
   if(!m) return null;
   const code = m[1].toUpperCase();
   if(SKIP_CODES.has(code)) return null;
   if(FREE_CODES.has(code)) return '__FREE__';
   return SUBJ_CODE[code] || code;
+}
+
+// A class-code prefix containing a dot (e.g. "04.KL") marks a valgfag
+// (elective) group — several parallel classes/subjects sharing one time slot.
+function isValgfagLine(line){
+  const m = line.trim().match(/^([0-9A-ZÆØÅ.]{2,6})\s+/i);
+  return m ? m[1].toUpperCase().includes('.') : false;
 }
 
 function asTimeLine(line){
@@ -336,7 +344,7 @@ function parseSkoleIntra(raw){
 }
 
 function parseDayBlock(header, lines){
-  const CODE_SHAPE = /^[0-9A-ZÆØÅ]{2,4}\s+[A-ZÆØÅ\/]{2,5}\b/i;
+  const CODE_SHAPE = /^[0-9A-ZÆØÅ.]{2,6}\s+[A-ZÆØÅ\/]{2,5}\b/i;
   let schedStart = -1;
   for(let i = 0; i < lines.length - 1; i++){
     if(asTimeLine(lines[i]) && CODE_SHAPE.test(lines[i+1])){
@@ -355,7 +363,7 @@ function parseDayBlock(header, lines){
     if(time){
       const name = resolveCodeLine(schedLines[i+1]);
       if(name === '__FREE__'){ freeSlots.push(time); i++; }
-      else if(name){ rawSlots.push({time, name}); i++; }
+      else if(name){ rawSlots.push({time, name, isValgfag: isValgfagLine(schedLines[i+1])}); i++; }
     }
   }
 
@@ -364,11 +372,33 @@ function parseDayBlock(header, lines){
     return m ? parseInt(m[1])*60 + parseInt(m[2]) : 0;
   }
 
-  // Merge only truly consecutive same-subject slots (gap ≤ 5 min)
-  const slots = [];
+  // Group same-time valgfag (elective) entries into a single combined slot
+  // before merging — several parallel subjects sharing one time slot become
+  // one card listing the options, instead of stacking duplicate time slots.
+  const valgfagGroups = {};
+  const normalRaw = [];
   for(const s of rawSlots){
+    if(s.isValgfag){
+      (valgfagGroups[s.time] = valgfagGroups[s.time] || []).push(s.name);
+    } else {
+      normalRaw.push(s);
+    }
+  }
+  const valgfagSlots = Object.entries(valgfagGroups).map(([time, names]) => ({
+    time, name: [...new Set(names)].join(' · '), options: [...new Set(names)], isValgfagGroup: true
+  }));
+  const groupedRaw = [...normalRaw, ...valgfagSlots]
+    .sort((a,b) => timeToMins(a.time.split('–')[0]) - timeToMins(b.time.split('–')[0]));
+
+  // Merge only truly consecutive same-subject slots (gap ≤ 5 min) —
+  // this now also merges consecutive valgfag groups that offer the same
+  // set of electives, giving them a ×N badge and a combined time range
+  // just like a normal double lesson.
+  const slots = [];
+  for(const s of groupedRaw){
     const prev = slots[slots.length-1];
-    if(prev && prev.name === s.name){
+    const sameType = prev && (!!prev.isValgfagGroup === !!s.isValgfagGroup);
+    if(prev && sameType && prev.name === s.name){
       const prevEnd   = timeToMins(prev.time.split('–')[1]);
       const thisStart = timeToMins(s.time.split('–')[0]);
       if(thisStart - prevEnd <= 5){
@@ -380,7 +410,7 @@ function parseDayBlock(header, lines){
     slots.push({...s, count: 1});
   }
 
-  const knownSubjectNames = new Set(slots.map(s => s.name.toLowerCase()));
+  const knownSubjectNames = new Set(slots.filter(s => !s.isValgfagGroup).map(s => s.name.toLowerCase()));
   const ALIASES = {
     'kirketime/trivselstime': 'trivsel',
     'trivsel/klassenstime':   'trivsel',
@@ -435,6 +465,10 @@ function parseDayBlock(header, lines){
   const consumedCount = {};
   const lessons = slotsWithBreaks.map(slot => {
     if(slot.isBreak) return { isBreak: true, time: slot.time, label: slot.label };
+    if(slot.isValgfagGroup){
+      return { time: slot.time, subject: slot.name, count: slot.count || 1, desc: '',
+        isValgfagGroup: true, options: slot.options, vikar: false };
+    }
     const slotNorm = norm(slot.name);
     let matched = null;
     for(const [k, secArr] of Object.entries(sectionMap)){
@@ -455,7 +489,7 @@ function parseDayBlock(header, lines){
   // Mark lessons with no description that follow an earlier occurrence of the same subject
   const seenSubjects = new Set();
   for(const l of lessons){
-    if(l.isBreak) continue;
+    if(l.isBreak || l.isValgfagGroup) continue;
     const key = norm(l.subject);
     if(l.desc && l.desc.trim().length > 0){
       seenSubjects.add(key);
@@ -483,7 +517,7 @@ function parseDayBlock(header, lines){
 
   // If all real lessons have trivially short or empty descriptions (≤ 30 chars),
   // treat the day as special — e.g. lejrskole days where teacher just writes "Lejrskole"
-  const realLessons = allLessons.filter(l => !l.isBreak && !l.isFree);
+  const realLessons = allLessons.filter(l => !l.isBreak && !l.isFree && !l.isValgfagGroup);
   const allTrivial = realLessons.length > 0 &&
     realLessons.every(l => !l.desc || l.desc.trim().length <= 30);
 
@@ -591,6 +625,16 @@ function renderPage(data, meta){
           return `<div class="lesson lesson-free">
             <span class="ltime">${esc(l.time)}</span>
             <span class="lsubject">🔔 Fri lektion</span>
+          </div>`;
+        }
+        if(l.isValgfagGroup){
+          const optsHTML = l.options.map(o=>esc(o)).join(' · ');
+          const doubleBadge = l.count > 1 ? `<span class="double-badge">×${l.count}</span>` : '';
+          const vColor = '#9B59B6';
+          const vBg = tint(vColor, 0.14);
+          return `<div class="lesson" style="background:${vBg};border-top:2px solid ${vColor};border-radius:2px 2px .3rem .3rem;">
+            <span class="ltime">${esc(l.time)}</span>
+            <span class="lsubject">${optsHTML}${doubleBadge}</span>
           </div>`;
         }
         const doubleBadge = l.count > 1 ? `<span class="double-badge">×${l.count}</span>` : '';
