@@ -472,15 +472,28 @@ function parseKlub(raw){
   const firstDayIdx = lines.findIndex(l => isDayHeader(l));
   const planStart = ugeplanIdx >= 0 ? ugeplanIdx + 1 : (firstDayIdx >= 0 ? firstDayIdx : 0);
 
+  // A month name on its own line is often a section heading. Accept variants:
+  //   "Klubbens maj", "Klubben i august", "August måned", "August:", "I august"
+  const MONTH_RE = /(januar|februar|marts|april|maj|juni|juli|august|september|oktober|november|december)/i;
+  const isMonthHeading = (l) => {
+    if(!l) return false;
+    // Must contain a month name AND be short enough to be a heading (not a paragraph)
+    if(!MONTH_RE.test(l)) return false;
+    if(l.length > 45) return false;                     // paragraphs about a month don't count
+    if(/^\d/.test(l.trim())) return false;              // "19. maj er der..." is a date item, not a heading
+    return true;
+  };
   const eventHeadings = [
     /ture\s*\/?\s*aftenklubber/i,
-    /klubbens?\s+(maj|juni|juli|august|september|oktober|november|december|januar|februar|marts|april)/i,
-    /klubben\s+indtil/i,
     /aftenklubber?\s+denne\s+uge/i,
+    /klubben\s+indtil/i,
   ];
+  const isEventHeading = (l) =>
+    eventHeadings.some(re => re.test(l)) || isMonthHeading(l);
+
   let eventsStart = -1;
   for(let i = planStart; i < lines.length; i++){
-    if(eventHeadings.some(re => re.test(lines[i]))){ eventsStart = i; break; }
+    if(isEventHeading(lines[i])){ eventsStart = i; break; }
   }
 
   const introLines = lines.slice(0, ugeplanIdx >= 0 ? ugeplanIdx : (firstDayIdx >= 0 ? firstDayIdx : lines.length));
@@ -562,11 +575,18 @@ function parseEvents(lines){
   if(!lines.length) return {sections: []};
   const sections = [];
   let current = null;
+  const MONTH_RE = /(januar|februar|marts|april|maj|juni|juli|august|september|oktober|november|december)/i;
+  const isMonthHeading = (l) => {
+    if(!l || !MONTH_RE.test(l)) return false;
+    if(l.length > 45) return false;
+    if(/^\d/.test(l.trim())) return false;
+    return true;
+  };
   const isHeading = (l) =>
     /ture\s*\/?\s*aftenklubber/i.test(l) ||
-    /klubbens?\s+(maj|juni|juli|august|september|oktober|november|december|januar|februar|marts|april)/i.test(l) ||
     /klubben\s+indtil/i.test(l) ||
-    /aftenklubber?\s+denne\s+uge/i.test(l);
+    /aftenklubber?\s+denne\s+uge/i.test(l) ||
+    isMonthHeading(l);
 
   for(const line of lines){
     if(!line) continue;
