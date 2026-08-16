@@ -232,7 +232,7 @@ const SUBJ_CODE = {
   'N/T':'Natur/teknologi', NAT:'Natur/teknologi', GEO:'Geografi',
   BIO:'Biologi', FYS:'Fysik/kemi', SAM:'Samfundsfag',
   TYS:'Tysk', FRA:'Fransk', TRIV:'Trivsel', FRI:'Fri', SFO:'SFO',
-  HDS:'Håndværk og design',
+  HDS:'Håndværk og design', SVØ:'Svømning',
 };
 
 const SUBJECT_COLORS = {
@@ -262,7 +262,7 @@ const SKIP_CODES = new Set(['BHK','ST','STØ']);
 const FREE_CODES = new Set(['FRI']);
 
 function resolveCodeLine(line){
-  const m = line.trim().match(/^[0-9A-ZÆØÅ.]{2,6}\s+([A-ZÆØÅ\/]{2,5})\b/i);
+  const m = line.trim().match(/^[0-9A-ZÆØÅ.]{2,6}\s+([A-ZÆØÅ\/]{2,5})(?=\s|$)/i);
   if(!m) return null;
   const code = m[1].toUpperCase();
   if(SKIP_CODES.has(code)) return null;
@@ -344,7 +344,7 @@ function parseSkoleIntra(raw){
 }
 
 function parseDayBlock(header, lines){
-  const CODE_SHAPE = /^[0-9A-ZÆØÅ.]{2,6}\s+[A-ZÆØÅ\/]{2,5}\b/i;
+  const CODE_SHAPE = /^[0-9A-ZÆØÅ.]{2,6}\s+[A-ZÆØÅ\/]{2,5}(?=\s|$)/i;
   let schedStart = -1;
   for(let i = 0; i < lines.length - 1; i++){
     if(asTimeLine(lines[i]) && CODE_SHAPE.test(lines[i+1])){
@@ -375,6 +375,10 @@ function parseDayBlock(header, lines){
   // Group same-time valgfag (elective) entries into a single combined slot
   // before merging — several parallel subjects sharing one time slot become
   // one card listing the options, instead of stacking duplicate time slots.
+  // If a cross-class (dotted-prefix) slot only ever offers ONE subject
+  // (e.g. a whole grade doing swimming together), it's not really a choice —
+  // treat it as a normal lesson so it still gets description matching and
+  // its own subject color.
   const valgfagGroups = {};
   const normalRaw = [];
   for(const s of rawSlots){
@@ -384,9 +388,17 @@ function parseDayBlock(header, lines){
       normalRaw.push(s);
     }
   }
-  const valgfagSlots = Object.entries(valgfagGroups).map(([time, names]) => ({
-    time, name: [...new Set(names)].join(' · '), options: [...new Set(names)], isValgfagGroup: true
-  }));
+  const valgfagSlots = [];
+  for(const [time, names] of Object.entries(valgfagGroups)){
+    const uniqueNames = [...new Set(names)];
+    if(uniqueNames.length === 1){
+      normalRaw.push({ time, name: uniqueNames[0] });
+    } else {
+      valgfagSlots.push({
+        time, name: uniqueNames.join(' · '), options: uniqueNames, isValgfagGroup: true
+      });
+    }
+  }
   const groupedRaw = [...normalRaw, ...valgfagSlots]
     .sort((a,b) => timeToMins(a.time.split('–')[0]) - timeToMins(b.time.split('–')[0]));
 
